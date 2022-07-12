@@ -29,14 +29,14 @@
 :warning: This mod is for the [**Desktop Application**](https://www.spotify.com/download/windows/) of Spotify on Windows only and **not the Microsoft Store version**.
 
 ### Installation/Update:
-* Just download and run [BlockTheSpot.bat](https://raw.githack.com/mrpond/BlockTheSpot/master/BlockTheSpot.bat)  
+* Just download and run [BlockTheSpot.bat](https://raw.githack.com/mrpond/BlockTheSpot/snapshot-pre-spotx-merge/BlockTheSpot.bat)  
 
 or
 
 #### Fully automated installation via PowerShell
 
 ```powershell
-[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-Expression "& { $(Invoke-WebRequest -UseBasicParsing 'https://raw.githubusercontent.com/mrpond/BlockTheSpot/master/install.ps1') } -UninstallSpotifyStoreEdition -UpdateSpotify -RemoveAdPlaceholder"
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-Expression "& { $(Invoke-WebRequest -UseBasicParsing 'https://raw.githubusercontent.com/mrpond/BlockTheSpot/snapshot-pre-spotx-merge/install.ps1') } -UninstallSpotifyStoreEdition -UpdateSpotify -RemoveAdPlaceholder"
 ```
 
 #### Manual installation
@@ -47,7 +47,7 @@ or
 4. Unzip `chrome_elf.dll` and `config.ini` to Spotify directory. 
 
 ### Uninstall:
-* Just run [uninstall.bat](https://raw.githack.com/mrpond/BlockTheSpot/master/uninstall.bat)
+* Just run [uninstall.bat](https://raw.githack.com/mrpond/BlockTheSpot/snapshot-pre-spotx-merge//uninstall.bat)
 or
 * Reinstall Spotify
 
