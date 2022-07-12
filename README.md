@@ -44,6 +44,8 @@ or
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; iex "& { $((iwr -useb 'https://raw.githubusercontent.com/amd64fox/SpotX/main/Install.ps1').Content) } -confirm_uninstall_ms_spoti -confirm_spoti_recomended_over"
 ```
 
+- Checkout [SpotX Repo](https://github.com/amd64fox/SpotX) for more options and features.
+
 #### Manual installation
 
 1. Browse to your Spotify installation folder `%APPDATA%\Spotify`
@@ -57,16 +59,9 @@ or
   or
 - Reinstall Spotify
 
-### Known Issues:
-
-- [#150](https://github.com/mrpond/BlockTheSpot/issues/150): Can be fixed by enabling the experimental feature when using `BlockTheSpot.bat`.
-- [#289](https://github.com/mrpond/BlockTheSpot/issues/289): Rare issue where audio ads may not get blocked sometimes.
-
 ### Additional Notes:
 
-- Installation script automatically detects if your Spotify client version is supported, or not. If the version is not supported, you will be prompted to update your Spotify client. To enforce client update, supply an optional parameter `UpdateSpotify` to the installation script.
-- Remove "Upgrade" Button [#83](https://github.com/mrpond/BlockTheSpot/issues/83) and Remove "Ad Placeholder" [#150](https://github.com/mrpond/BlockTheSpot/issues/150) only works when you use any of the auto installation methods and press `y` if prompted.
 - "chrome_elf.dll" gets replaced by the Spotify installer each time it updates, hence why you'll probably need to apply the patch again when it happens
 - [Spicetify](https://github.com/khanhas/spicetify-cli) users will need to reapply BlockTheSpot after applying a Spicetify themes/patches.
-- If the automatic install/uninstall scripts do not work, please contact [Nuzair46](https://github.com/Nuzair46).
+- If the automatic install/uninstall scripts do not work, please contact [SpotX](https://github.com/amd64fox/SpotX) or [Nuzair46](https://github.com/Nuzair46).
 - For more support and discussions, join our [Discord server](https://discord.gg/p43cusgUPm).
