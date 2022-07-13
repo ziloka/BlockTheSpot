@@ -34,7 +34,7 @@
 
 ### Installation/Update:
 
-- Just download and run [SpotX](https://raw.githack.com/amd64fox/SpotX/main/scripts/Install_Basic.bat)
+- Just download and run [SpotX](https://raw.githack.com/mrpond/BlockTheSpot/main/SpotXBasic.bat)
 
 or
 
@@ -57,7 +57,7 @@ or
 
 ### Uninstall:
 
-- Just run [uninstall.bat](https://github.com/amd64fox/SpotX/main/Uninstall.bat)
+- Just run [uninstall.bat](https://github.com/mrpond/BlockTheSpot/main/Uninstall.bat)
   or
 - Reinstall Spotify
 
