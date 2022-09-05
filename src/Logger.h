@@ -3,7 +3,7 @@
 
 class Logger {
 private:
-	auto current_datetime ()
+	static const auto& current_datetime ()
 	{
 		static struct tm newtime;
 		static __time64_t long_time;
@@ -13,7 +13,7 @@ private:
 	}
 
 	std::ofstream log_stream;
-	const bool read (std::string_view app, std::string_view key, int def_value = 0) {
+	const bool read (std::string_view app, std::string_view key,const int def_value = 0) {
 		if (1 == GetPrivateProfileInt (app.data (), key.data (), def_value, "./config.ini")) {
 			return true;
 		}
