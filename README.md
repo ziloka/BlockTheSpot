@@ -11,7 +11,7 @@
     <h4 align="center">A multi-purpose adblocker and skip-bypass for the <strong>Windows</strong> Spotify desktop application.</h4>
     <h5 align="center">Please support Spotify by purchasing premium</h5>
     <p align="center">
-        <strong>Last updated:</strong> 29 October 2021<br>
+        <strong>Last updated:</strong> 05 September 2022<br>
         <strong>Last tested version:</strong> 1.1.93.896.g3ae3b4f3
     </p> 
 </center>
