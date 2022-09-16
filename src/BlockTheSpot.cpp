@@ -2,21 +2,22 @@
 //
 
 #include "stdafx.h"
+#include <map>
 
-void __stdcall LoadAPI (LPVOID* destination, LPCSTR apiName)
+void __stdcall LoadAPI (LPVOID* destination, const char* apiName)
 {
 	if (*destination)
 		return;
 
-	char path[MAX_PATH];
-	//wchar_t windows[MAX_PATH];
-	//GetSystemDirectoryW(windows, MAX_PATH);
-	//wsprintf(path, L"%s\\netutils.dll", windows);
-	wsprintf (path, ".\\chrome_elf_bak.dll");
-	HMODULE hModule = GetModuleHandle (path);
-	if (!hModule && !(hModule = LoadLibrary (path)))
+	static std::string_view path{ ".\\chrome_elf_bak.dll" };
+	static HMODULE hModule = GetModuleHandle (path.data ());
+	static std::map<std::string,FARPROC> function_map;
+	if (!hModule && !(hModule = LoadLibrary (path.data ())))
 		return;
-	*destination = GetProcAddress (hModule, apiName);
+	if (function_map[apiName] == nullptr) {
+		function_map[apiName] = GetProcAddress (hModule, apiName);
+	}
+	*destination = function_map[apiName];
 }
 
 #define API_EXPORT_ORIG(N) \

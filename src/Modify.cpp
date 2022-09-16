@@ -52,7 +52,7 @@ cef_urlrequest_t* cef_urlrequest_create_hook (struct _cef_request_t* request,
 */
 
 // https://www.unknowncheats.me/forum/1064672-post23.html
-bool DataCompare (BYTE* pData, BYTE* bSig, char* szMask)
+bool DataCompare (BYTE* pData, BYTE* bSig,const char* szMask)
 {
 	for (; *szMask; ++szMask, ++pData, ++bSig)
 	{
@@ -62,7 +62,7 @@ bool DataCompare (BYTE* pData, BYTE* bSig, char* szMask)
 	return (*szMask) == NULL;
 }
 
-BYTE* FindPattern (BYTE* dwAddress, const DWORD dwSize, BYTE* pbSig, char* szMask)
+BYTE* FindPattern (BYTE* dwAddress, const DWORD dwSize, BYTE* pbSig,const char* szMask)
 {
 	DWORD length = strlen (szMask);
 	for (DWORD i = NULL; i < dwSize - length; i++)
