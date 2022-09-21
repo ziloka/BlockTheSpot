@@ -22,6 +22,7 @@ Zip and attach the log file.
  - [ ] You are using the latest [BlockTheSpot](https://www.github.com/mrpond/BlockTheSpot/releases) from github.
  - [ ] You uninstalled Spotify and just ran [SpotX](https://raw.githack.com/amd64fox/SpotX/main/scripts/Install_Basic.bat) and is still having issues.
  - [ ] You read through the [known issues](https://github.com/mrpond/BlockTheSpot/blob/master/README.md#known-issues) section in the README.
+ - [ ] You read through [SpotX FAQ](https://telegra.ph/SpotX-FAQ-09-19#I-get-the-error-%22The-remote-name-could-not-be-resolved%22-while-running-the-install)
  - [ ] You read through the [additional notes](https://github.com/mrpond/BlockTheSpot/blob/master/README.md#additional-notes) section in the README.
  - [ ] You enabled logging by editing config.ini `set log = 1`.
  - [ ] Make sure whether an issue related yours is already open or not.
@@ -29,6 +30,7 @@ Zip and attach the log file.
 
 ## Note: 
 - Antivirus detections are false positive. Please only open an issue if you find any vulnerability in the code. False reports will be closed without notice.
+- If we find that you have opened an issue without following the troubleshooting above, the issue will be closed without notice.
 
 <!-- Remove this line and 
 
