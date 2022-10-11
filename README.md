@@ -1,6 +1,11 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/31l6ynm0a1fhr2vs/branch/master?svg=true)](https://ci.appveyor.com/project/mrpond/blockthespot/branch/master) [![Discord](https://discord.com/api/guilds/807273906872123412/widget.png)](https://discord.gg/p43cusgUPm)
 
 <center>
+    <h2 align="center"> IMPORTANT ANNOUNCEMENT </h2>
+    <p align="center">BlockTheSpot is reaching its end of life. Meaning that when the next major Spotify update breaks this patch, it wont be supported anymore. After this day, this repository will be a public archive. <strong>But it's not the end.</strong> We are moving to <a href="https://github.com/spotx-cli">SpotX</a>. For more info, join our Discord.</p>
+</center>
+
+<center>
     <h3 align="center"><a href="https://en.wikipedia.org/wiki/2020_Thai_protests">Support the 2020 Thailand & 2021 Myanmar protests</a></h3>
     <h3 align="center">Help me stop the dictatorship in Thailand and Myanmar!</h3>
     <h3 align="center">Southeast Asia strong together!</h3>
