@@ -16,3 +16,5 @@
 *.dll
 *.aps
 *.zip
+/.vs
+/src/.vs/BlockTheSpot/v16
