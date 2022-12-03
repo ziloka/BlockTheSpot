@@ -6,20 +6,16 @@
 </center>
 
 <center>
-    <h3 align="center"><a href="https://en.wikipedia.org/wiki/2020_Thai_protests">Support the 2020 Thailand & 2021 Myanmar protests</a></h3>
-    <h3 align="center">Help me stop the dictatorship in Thailand and Myanmar!</h3>
-    <h3 align="center">Southeast Asia strong together!</h3>
-</center>
-
-<center>
     <h1 align="center">BlockTheSpot</h1>
     <h4 align="center">A multi-purpose adblocker and skip-bypass for the <strong>Windows</strong> Spotify desktop application.</h4>
     <h5 align="center">Please support Spotify by purchasing premium</h5>
     <p align="center">
-        <strong>Last updated:</strong> 29 October 2021<br>
-        <strong>Last tested version:</strong> 1.1.94.870.gf994cb0b
+        <strong>Last updated:</strong> 3 December 2022 <br>
+        <strong>Last tested version:</strong> 1.1.99.878.g1e4ccc6e
     </p> 
 </center>
+
+#### Just run simple.bat if you lazy to read things.
 
 #### Important checks before installing:
 
@@ -56,9 +52,8 @@ or
 #### Manual installation
 
 1. Browse to your Spotify installation folder `%APPDATA%\Spotify`
-2. Rename `chrome_elf.dll` to `chrome_elf_bak.dll`. The naming is important.
-3. Download `chrome_elf.zip` from [releases](https://github.com/mrpond/BlockTheSpot/releases)
-4. Unzip `chrome_elf.dll` and `config.ini` to Spotify directory.
+2. Download `chrome_elf.zip` from [releases](https://github.com/mrpond/BlockTheSpot/releases)
+3. Unzip `dpapi.dll` and `config.ini` to Spotify directory.
 
 ### Uninstall:
 
@@ -68,7 +63,7 @@ or
 
 ### Additional Notes:
 
-- "chrome_elf.dll" gets replaced by the Spotify installer each time it updates, hence why you'll probably need to apply the patch again when it happens
+- "dpapi.dll" may gets removed by the Spotify installer each time it updates, hence why you'll probably need to apply the patch again when it happens
 - [Spicetify](https://github.com/khanhas/spicetify-cli) users will need to reapply BlockTheSpot after applying a Spicetify themes/patches.
 - If the automatic install/uninstall scripts do not work, open issue at [SpotX](https://github.com/amd64fox/SpotX) or contact [Amd64Fox](https://github.com/amd64fox) or [Nuzair46](https://github.com/Nuzair46).
 - For more support and discussions, join our [Discord server](https://discord.gg/p43cusgUPm).
