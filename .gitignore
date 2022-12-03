@@ -2,13 +2,16 @@
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
 
-*.ipch
-/.vs/VSWorkspaceState.json
-/.vs/ProjectSettings.json
-/.vs/slnx.sqlite
-/.vs/BlockTheSpot
-/src/.vs/BlockTheSpot/v16
+.vs/
+*.obj
+*.tlog
+*.pdb
+*.log
+*.recipe
+*.pch
+/src/.vs/
 /src/Release
+/src/Debug
 *.sln
 /Debug
 /Release
@@ -17,6 +20,5 @@
 *.ipdb
 *.lib
 *.dll
-/src/Debug
 *.aps
 *.zip
