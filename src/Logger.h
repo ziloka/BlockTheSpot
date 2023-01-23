@@ -9,12 +9,12 @@ private:
 		static __time64_t long_time;
 		_time64 (&long_time);
 		localtime_s (&newtime, &long_time);
-		return std::put_time (&newtime, "%d-%b-%Y %H:%M:%S");
+		return newtime;
 	}
-
-	std::ofstream log_stream;
-	const bool read (std::string_view app, std::string_view key,const int def_value = 0) {
-		if (1 == GetPrivateProfileInt (app.data (), key.data (), def_value, "./config.ini")) {
+	
+	std::wofstream log_wstream;
+	const bool read (std::wstring_view app, std::wstring_view key,const int def_value = 0) {
+		if (1 == GetPrivateProfileInt (app.data (), key.data (), def_value, L"./config.ini")) {
 			return true;
 		}
 		return false;
@@ -23,24 +23,25 @@ private:
 
 public:
 	Logger () {
-		if (read ("Config", "Log")) {
-			log_stream.open ("blockthespot_log.txt", std::ios::out | std::ios::app);
+		if (read (L"Config", L"Log")) {
+			log_wstream.open (L"blockthespot_log.txt", std::ios::out | std::ios::app);
 			//m_log << "BlockTheSpot - Build date: " << __TIMESTAMP__ << std::endl;
 		}
 	}
 
 	~Logger () {
-		if (log_stream.is_open()) {
-			log_stream.flush ();
-			log_stream.close ();
+		if (log_wstream.is_open()) {
+			log_wstream.flush ();
+			log_wstream.close ();
 		}
 	}
 
-	void Log (std::string_view log) {
-		if (log_stream.is_open ()) {
-			std::stringstream message;
-			message << "LOG | " << current_datetime () << " - " << log;
-			log_stream << message.str() << std::endl;
+	void Log (std::wstring_view log) {
+		if (log_wstream.is_open ()) {
+			std::wstringstream message;
+			auto time = current_datetime();
+			message << L"LOG | " << std::put_time(&time, L"%d-%b-%Y %H:%M:%S") << L" - " << log;
+			log_wstream << message.str() << std::endl;
 		}
 			
 	}
