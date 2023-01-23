@@ -39,7 +39,7 @@ public:
 	void Log (std::wstring_view log) {
 		if (log_wstream.is_open ()) {
 			std::wstringstream message;
-			auto time = current_datetime();
+			const auto& time = current_datetime();
 			message << L"LOG | " << std::put_time(&time, L"%d-%b-%Y %H:%M:%S") << L" - " << log;
 			log_wstream << message.str() << std::endl;
 		}
