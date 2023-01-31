@@ -9,10 +9,12 @@ void __stdcall LoadAPI (LPVOID* destination, const char* apiName)
 	if (*destination)
 		return;
 
-	static std::wstring_view path{ L"dpapi.dll" };
-	static HMODULE hModule = GetModuleHandle (path.data ());
-	static std::map<std::string,FARPROC> function_map;
-	if (!hModule && !(hModule = LoadLibrary (path.data ())))
+	static constexpr auto path{ L"dpapi.dll" };
+	static std::map<std::string, FARPROC> function_map;
+	static HMODULE hModule = GetModuleHandle (path);
+	if (!hModule)
+		hModule = LoadLibrary(path);
+	if (!hModule)
 		return;
 	if (function_map[apiName] == nullptr) {
 		function_map[apiName] = GetProcAddress (hModule, apiName);

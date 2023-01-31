@@ -28,7 +28,7 @@ static _cef_urlrequest_create cef_urlrequest_create_orig;
 
 static _cef_string_userfree_utf16_free cef_string_userfree_utf16_free_orig;
 
-static constexpr std::array<std::wstring_view, 3> block_list = { L"/ads/", L"/ad-logic/", L"/gabo-receiver-service/" };
+static constexpr auto block_list = { L"/ads/", L"/ad-logic/", L"/gabo-receiver-service/" };
 
 
 DWORD WINAPI get_url(DWORD pRequest)
@@ -56,7 +56,7 @@ DWORD WINAPI get_str(DWORD pRequest)
 		mov ecx, pRequest
 		mov eax, dword ptr ds : [ecx]
 		mov retval, eax
-}
+	}
 	return retval;
 }
 #ifndef NDEBUG
@@ -69,67 +69,38 @@ void* cef_urlrequest_create_hook(void* request, void* client, void* request_cont
 	cef_string_utf16_t*  url_utf16 = request->get_url (request);
 	std::wstring url(url_utf16->str);
 #else
-	auto url_utf16 = get_url((DWORD)request);
+	auto url_utf16 = get_url(reinterpret_cast<DWORD>(request));
 	std::wstring url(reinterpret_cast<wchar_t*>(get_str(url_utf16)));
 #endif
-	for (const auto& blockurl : block_list) {
+	cef_string_userfree_utf16_free_orig(reinterpret_cast<void*>(url_utf16));
+	//cef_string_userfree_utf16_free(url_utf16);
+	for (auto blockurl : block_list) {
 		if (std::wstring_view::npos != url.find (blockurl)) {
 			g_Logger.Log(L"blocked - " + url);
-			//cef_string_userfree_utf16_free(url_utf16);
-			cef_string_userfree_utf16_free_orig((void*)url_utf16);
+		
 			return nullptr;
 		}
 	}
-	//cef_string_userfree_utf16_free(url_utf16);
-	cef_string_userfree_utf16_free_orig((void*)url_utf16);
+	
 	g_Logger.Log(L"allow - " + url);
 	return cef_urlrequest_create_orig (request, client, request_context);
 }
 
-
-// https://www.unknowncheats.me/forum/1064672-post23.html
-bool DataCompare (BYTE* pData, BYTE* bSig,const char* szMask)
-{
-	for (; *szMask; ++szMask, ++pData, ++bSig)
-	{
-		if (*szMask == 'x' && *pData != *bSig)
-			return false;
-	}
-	return (*szMask) == NULL;
-}
-
-BYTE* FindPattern (BYTE* dwAddress, const DWORD dwSize, BYTE* pbSig,const char* szMask)
-{
-	DWORD length = strlen (szMask);
-	for (DWORD i = NULL; i < dwSize - length; i++)
-	{
-		__try
-		{
-			if (DataCompare (dwAddress + i, pbSig, szMask))
-				return dwAddress + i;
-		}
-		__except (EXCEPTION_EXECUTE_HANDLER) {
-			return nullptr;
-		}
-	}
-	return 0;
-}
-
-
 DWORD WINAPI KillBanner (LPVOID)
 {
-	auto hModule = GetModuleHandle (L"libcef.dll");
+	constexpr auto libcef_str{ L"libcef.dll" };
+	auto hModule = GetModuleHandle(libcef_str);
 	if (!hModule)
-		hModule = LoadLibrary (L"libcef.dll");
+		hModule = LoadLibrary(libcef_str);
 
 	if (hModule)
 	{
-		cef_urlrequest_create_orig = /*cef_urlrequest_create;*/(_cef_urlrequest_create)GetProcAddress (hModule, "cef_urlrequest_create");
+		cef_urlrequest_create_orig = /*cef_urlrequest_create;*/reinterpret_cast<_cef_urlrequest_create>(GetProcAddress (hModule, "cef_urlrequest_create"));
 		
-		cef_string_userfree_utf16_free_orig = /*cef_urlrequest_create;*/(_cef_string_userfree_utf16_free)GetProcAddress (hModule, "cef_string_userfree_utf16_free");
+		cef_string_userfree_utf16_free_orig = /*_cef_string_userfree_utf16_free;*/reinterpret_cast<_cef_string_userfree_utf16_free>(GetProcAddress (hModule, "cef_string_userfree_utf16_free"));
 
 		if (cef_urlrequest_create_orig && cef_string_userfree_utf16_free_orig) {
-			auto result = Mhook_SetHook ((PVOID*)&cef_urlrequest_create_orig, cef_urlrequest_create_hook);
+			auto result = Mhook_SetHook (reinterpret_cast<PVOID*>(&cef_urlrequest_create_orig), cef_urlrequest_create_hook);
 			result ? g_Logger.Log(L"main process - patch success!") : g_Logger.Log(L"main process - patch failed!");
 		}
 	}
