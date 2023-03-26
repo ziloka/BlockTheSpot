@@ -3,11 +3,7 @@
 
 ## IMPORTANT ANNOUNCEMENT
 
-BlockTheSpot is no longer support. 
-
-Next major Spotify update may breaks this, Since I don't had time.
-
-Considered check alternative https://github.com/spotx-cli
+BlockTheSpot is back! for now. 
 
 BlockTheSpot
 
