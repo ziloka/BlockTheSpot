@@ -114,23 +114,6 @@ BYTE* FindPattern(BYTE* dwAddress, const DWORD dwSize, BYTE* pbSig, const char* 
 	return 0;
 }
 
-int FindPattern2(BYTE* dwAddress, const DWORD dwSize, BYTE* pbSig, const char* szMask)
-{
-	DWORD length = strlen(szMask);
-	for (DWORD i = NULL; i < dwSize - length; i++)
-	{
-		__try
-		{
-			if (DataCompare(dwAddress + i, pbSig, szMask))
-				return i;
-		}
-		__except (EXCEPTION_EXECUTE_HANDLER) {
-			return 0;
-		}
-	}
-	return 0;
-}
-
 DWORD WINAPI KillBanner (LPVOID)
 {
 	constexpr auto libcef_str{ L"libcef.dll" };
@@ -146,7 +129,7 @@ DWORD WINAPI KillBanner (LPVOID)
 
 		if (cef_urlrequest_create_orig && cef_string_userfree_utf16_free_orig) {
 			auto result = Mhook_SetHook (reinterpret_cast<PVOID*>(&cef_urlrequest_create_orig), cef_urlrequest_create_hook);
-			result ? g_Logger.Log(L"main process - patch success!") : g_Logger.Log(L"main process - patch failed!");
+			result ? g_Logger.Log(L"libcef.dll patch success!") : g_Logger.Log(L"libcef.dll patch failed!");
 		}
 	}
 	return 0;
@@ -155,35 +138,32 @@ DWORD WINAPI KillBanner (LPVOID)
 DWORD WINAPI Developer(LPVOID)
 {
 	if (true == g_Logger.read(L"Config", L"Developer")) {
-		auto appdata = std::getenv("APPDATA");
-		std::filesystem::path file{ appdata };
-		file = file.parent_path();
-		file /= "Local\\Spotify\\offline.bnk";
-		std::fstream offline_bnk;
-		offline_bnk.open(file, std::ios::in | std::ios::out | std::ios::binary);
-		if (true == offline_bnk.is_open()) {
-			const auto length = std::filesystem::file_size(file);
-			if (length > 0)
+		HMODULE hModule = GetModuleHandle(NULL);
+		MODULEINFO mInfo = { 0 };
+		if (GetModuleInformation(GetCurrentProcess(), hModule, &mInfo, sizeof(MODULEINFO))) {
+			auto skipPod = FindPattern((uint8_t*)hModule, mInfo.SizeOfImage, (BYTE*)"\x25\x01\xFF\xFF\xFF\x89\x85\xF8\xFB\xFF\xFF", "xxxxxx???xx");
+			if (skipPod)
 			{
-				char* temp_buffer = new char[length];
-				offline_bnk.rdbuf()->sgetn(temp_buffer, length);
-				auto developer = FindPattern2((uint8_t*)temp_buffer, length, 
-					(BYTE*)"\x61\x70\x70\x2D\x64\x65\x76\x65\x6C\x6F\x70\x65\x72\x09\x01\x30\x78", 
-					"xxxxxxxxxxxxxxxxx");
-				//app-developer \x09 \x01 \x30 \x78 -> app-developer(\t\x01)00x
-				if (developer) {
-					offline_bnk.seekp(developer + 15);
-					offline_bnk << char(0x32);//00x -> 02x
-					g_Logger.Log(L"offline.bnk modified!");
-				}
-				else {
-					g_Logger.Log(L"offline.bnk not modified!");
-				}
-				delete[] temp_buffer;
+				DWORD oldProtect;
+				VirtualProtect((char*)skipPod + 0, 1, PAGE_EXECUTE_READWRITE, &oldProtect);
+				memset((char*)skipPod + 0, 0xB8, 1);
+				VirtualProtect((char*)skipPod + 0, 1, oldProtect, &oldProtect);
+
+				VirtualProtect((char*)skipPod + 1, 1, PAGE_EXECUTE_READWRITE, &oldProtect);
+				memset((char*)skipPod + 1, 0x03, 1);
+				VirtualProtect((char*)skipPod + 1, 1, oldProtect, &oldProtect);
+
+				VirtualProtect((char*)skipPod + 2, 3, PAGE_EXECUTE_READWRITE, &oldProtect);
+				memset((char*)skipPod + 2, 0x00, 3);
+				VirtualProtect((char*)skipPod + 2, 3, oldProtect, &oldProtect);
+				g_Logger.Log(L"Developer - patch success!");
+			}
+			else {
+				g_Logger.Log(L"Developer - patch failed!");
 			}
 		}
 		else {
-			g_Logger.Log(L"offline.bnk not exists/access denied!");
+			g_Logger.Log(L"GetModuleInformation failed!");
 		}
 	}
 	return 0;
