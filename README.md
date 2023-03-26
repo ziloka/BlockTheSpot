@@ -11,8 +11,8 @@ Please support Spotify by purchasing premium
 
 new feature! 
 built-in developer mode, check config.ini to enable it
-![image](https://user-images.githubusercontent.com/18654771/227779089-aaad8aa1-cb1f-4837-aee9-e5885d3584e9.png)
 
+![image](https://user-images.githubusercontent.com/18654771/227779089-aaad8aa1-cb1f-4837-aee9-e5885d3584e9.png)
 
 Enable developer mode and set flex to none. to hide ugly black banner at song playlist
 ![image](https://user-images.githubusercontent.com/18654771/227779068-67b6ec85-e148-43d9-a325-6b67cb6c164b.png)
