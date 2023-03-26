@@ -9,12 +9,12 @@
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 // Windows Header Files:
 #include <windows.h>
+#include <shlobj.h>
 #include <Psapi.h>
-
+#include <filesystem>
 
 // TODO: reference additional headers your program requires here
 #include <fstream>
-#include <iomanip>
 #include <sstream>
 #include <string>
 #include "mhook-lib/mhook.h"
