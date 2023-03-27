@@ -152,6 +152,7 @@ void WINAPI modify_buffer()
 	{
 		memset((char*)skipads + 12, 0x31, 1); // 122 to 000
 		g_Logger.Log(L"adsEnabled patched!");
+		xpui_found = true;
 	}
 	const auto skipsentry = FindPattern((uint8_t*)buff_addr, buff_size, (BYTE*)"sentry.io", "xxxxxxxxx");
 	if (skipsentry)
@@ -176,7 +177,6 @@ void WINAPI modify_buffer()
 		}
 		g_Logger.Log(L"premium patched!");
 	}
-	xpui_found = true;
 }
 
 __declspec(naked) void hook_zip_buffer()
