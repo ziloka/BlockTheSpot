@@ -3,7 +3,7 @@
 
 ## BlockTheSpot is back! 
 
-Doing things Without modify xpui.spa, or running any .bat file or powershell script!!
+Doing things without modify xpui.spa, you don't need to running any .bat/powershell script!!
 
 Since BlockTheSpot will modify them (in memory) on the fly!!
 
@@ -18,6 +18,7 @@ Please support Spotify by purchasing premium
 - choose old/new theme(YLX)
 - enable right sidebar
 - default hide upgrade button on top bar
+
 and much more...
 
 
