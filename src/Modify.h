@@ -1,5 +1,5 @@
 #pragma once
 #include "stdafx.h"
 
-DWORD WINAPI KillBanner (LPVOID);
+DWORD WINAPI KillAds (LPVOID);
 DWORD WINAPI Developer (LPVOID);

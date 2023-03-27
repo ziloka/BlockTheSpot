@@ -6,9 +6,9 @@
 #include <include/capi/cef_urlrequest_capi.h>
 #endif
 /*
-* 
+*
 * Black banner still show even libcef hooked.
-* 
+*
 */
 
 static Logger g_Logger;
@@ -20,7 +20,7 @@ using _cef_urlrequest_create = void* (*)(void* request,
 	void* client,
 	void* request_context);
 
-using _cef_string_userfree_utf16_free = void * (*)(/*void* str*/void* addr);
+using _cef_string_userfree_utf16_free = void* (*)(/*void* str*/void* addr);
 
 
 static _cef_urlrequest_create cef_urlrequest_create_orig;
@@ -30,13 +30,18 @@ static _cef_string_userfree_utf16_free cef_string_userfree_utf16_free_orig;
 static constexpr auto block_list = { L"/ads/", L"/ad-logic/", L"/gabo-receiver-service/" };
 //static constexpr char search_str[] = {0x61,0x70,0x70,0x2D,0x64,0x65,0x76,0x65,0x6C,0x6F,0x70,0x65,0x72,0x09,0x01,0x30,0x78};
 
+static bool xpui_found = false;
+static DWORD ret_addr = 0;
+static DWORD buff_addr = 0;
+static DWORD buff_size = 0;
+
 DWORD WINAPI get_url(DWORD pRequest)
 {
 	DWORD retval;
 	__asm
 	{
 		mov eax, pRequest
-		mov ecx, dword ptr ds:[eax+0x18]
+		mov ecx, dword ptr ds : [eax + 0x18]
 		mov edx, eax
 		push edx
 		call ecx
@@ -59,13 +64,13 @@ DWORD WINAPI get_str(DWORD pRequest)
 	return retval;
 }
 #ifndef NDEBUG
-void* cef_urlrequest_create_hook (struct _cef_request_t* request, void* client, void* request_context)
+void* cef_urlrequest_create_hook(struct _cef_request_t* request, void* client, void* request_context)
 #else
 void* cef_urlrequest_create_hook(void* request, void* client, void* request_context)
 #endif
 {
 #ifndef NDEBUG
-	cef_string_utf16_t*  url_utf16 = request->get_url (request);
+	cef_string_utf16_t* url_utf16 = request->get_url(request);
 	std::wstring url(url_utf16->str);
 #else
 	auto url_utf16 = get_url(reinterpret_cast<DWORD>(request));
@@ -74,15 +79,15 @@ void* cef_urlrequest_create_hook(void* request, void* client, void* request_cont
 	cef_string_userfree_utf16_free_orig(reinterpret_cast<void*>(url_utf16));
 	//cef_string_userfree_utf16_free(url_utf16);
 	for (auto blockurl : block_list) {
-		if (std::wstring_view::npos != url.find (blockurl)) {
+		if (std::wstring_view::npos != url.find(blockurl)) {
 			g_Logger.Log(L"blocked - " + url);
-		
+
 			return nullptr;
 		}
 	}
-	
+
 	g_Logger.Log(L"allow - " + url);
-	return cef_urlrequest_create_orig (request, client, request_context);
+	return cef_urlrequest_create_orig(request, client, request_context);
 }
 
 
@@ -114,7 +119,7 @@ BYTE* FindPattern(BYTE* dwAddress, const DWORD dwSize, BYTE* pbSig, const char* 
 	return 0;
 }
 
-DWORD WINAPI KillBanner (LPVOID)
+DWORD WINAPI KillAds(LPVOID)
 {
 	constexpr auto libcef_str{ L"libcef.dll" };
 	auto hModule = GetModuleHandle(libcef_str);
@@ -123,24 +128,78 @@ DWORD WINAPI KillBanner (LPVOID)
 
 	if (hModule)
 	{
-		cef_urlrequest_create_orig = /*cef_urlrequest_create;*/reinterpret_cast<_cef_urlrequest_create>(GetProcAddress (hModule, "cef_urlrequest_create"));
-		
-		cef_string_userfree_utf16_free_orig = /*_cef_string_userfree_utf16_free;*/reinterpret_cast<_cef_string_userfree_utf16_free>(GetProcAddress (hModule, "cef_string_userfree_utf16_free"));
+		cef_urlrequest_create_orig = /*cef_urlrequest_create;*/reinterpret_cast<_cef_urlrequest_create>(GetProcAddress(hModule, "cef_urlrequest_create"));
+
+		cef_string_userfree_utf16_free_orig = /*_cef_string_userfree_utf16_free;*/reinterpret_cast<_cef_string_userfree_utf16_free>(GetProcAddress(hModule, "cef_string_userfree_utf16_free"));
 
 		if (cef_urlrequest_create_orig && cef_string_userfree_utf16_free_orig) {
-			auto result = Mhook_SetHook (reinterpret_cast<PVOID*>(&cef_urlrequest_create_orig), cef_urlrequest_create_hook);
+			auto result = Mhook_SetHook(reinterpret_cast<PVOID*>(&cef_urlrequest_create_orig), cef_urlrequest_create_hook);
 			result ? g_Logger.Log(L"libcef.dll patch success!") : g_Logger.Log(L"libcef.dll patch failed!");
 		}
 	}
 	return 0;
 }
 
+void WINAPI modify_buffer()
+{
+	if (false == xpui_found) {
+		auto skipPod = FindPattern((uint8_t*)buff_addr, buff_size, (BYTE*)"{height:122px}}#", "xxxxxxxxxxxxxxxx");
+		if (skipPod)
+		{
+			memset((char*)skipPod + 8, 0x30, 3); // 122 to 000
+			xpui_found = true;
+		}
+	}
+}
+
+__declspec(naked) void hook_zip_buffer()
+{
+	__asm
+	{
+		add eax, edi;
+		mov buff_addr, eax;
+		push eax;
+		call edx;
+		mov buff_size, eax;
+		//------------ preparation --------------------
+		pushad;
+		//------------ function call ------------------
+		call modify_buffer;
+		//------------ end call ------------------
+		popad;
+		//------------ finish -------------------------
+		push ret_addr;
+		retn;
+	}
+}
+
 DWORD WINAPI Developer(LPVOID)
 {
-	if (true == g_Logger.read(L"Config", L"Developer")) {
-		HMODULE hModule = GetModuleHandle(NULL);
-		MODULEINFO mInfo = { 0 };
-		if (GetModuleInformation(GetCurrentProcess(), hModule, &mInfo, sizeof(MODULEINFO))) {
+	const HMODULE hModule = GetModuleHandle(NULL);
+	MODULEINFO mInfo = { 0 };
+	if (true == GetModuleInformation(GetCurrentProcess(), hModule, &mInfo, sizeof(MODULEINFO))) {
+		if (true == g_Logger.read(L"Config", L"Banner")) {
+			auto skipPod = FindPattern((uint8_t*)hModule, mInfo.SizeOfImage, (BYTE*)"\x8B\x45\xEC\x03\xC7\x50\xFF\xD2\x03\xF8", "xxxxxxxxxx");
+			if (skipPod)
+			{
+				const DWORD dwTmp = reinterpret_cast<DWORD>(skipPod) + 3;
+				ret_addr = dwTmp + 5;
+				DWORD oldProtect;
+#pragma region Zip_buffer_hook
+				VirtualProtect((LPVOID)dwTmp, 5, PAGE_EXECUTE_READWRITE, &oldProtect);
+				*(BYTE*)dwTmp = 0xE9; // jmp
+				*(DWORD*)(dwTmp + 1) = (DWORD)hook_zip_buffer - dwTmp - 5;
+				VirtualProtect((LPVOID)dwTmp, 5, oldProtect, &oldProtect);
+#pragma endregion
+				g_Logger.Log(L"Banner - patch success!");
+			}
+			else {
+				g_Logger.Log(L"Banner - patch failed!");
+			}
+
+		}
+
+		if (true == g_Logger.read(L"Config", L"Developer")) {
 			auto skipPod = FindPattern((uint8_t*)hModule, mInfo.SizeOfImage, (BYTE*)"\x25\x01\xFF\xFF\xFF\x89\x85\xF8\xFB\xFF\xFF", "xxxxxx???xx");
 			if (skipPod)
 			{
@@ -161,10 +220,11 @@ DWORD WINAPI Developer(LPVOID)
 			else {
 				g_Logger.Log(L"Developer - patch failed!");
 			}
+
 		}
-		else {
-			g_Logger.Log(L"GetModuleInformation failed!");
-		}
+	}
+	else {
+		g_Logger.Log(L"GetModuleInformation - failed!");
 	}
 	return 0;
 }

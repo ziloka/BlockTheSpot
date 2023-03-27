@@ -13,10 +13,10 @@ BOOL APIENTRY DllMain (HMODULE hModule,
 		{
 		case DLL_PROCESS_ATTACH:
 			if (std::wstring_view::npos == procname.find (L"--type=")) {
-				// Modify offline.bnk
+				// Modify offline.bnk - main process
 				CreateThread (NULL, NULL, Developer, NULL, 0, NULL);
 				// block ads request - main process
-				CreateThread (NULL, NULL, KillBanner, NULL, 0, NULL);
+				CreateThread (NULL, NULL, KillAds, NULL, 0, NULL);
 			}
 			
 			break;
