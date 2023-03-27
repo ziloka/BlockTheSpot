@@ -104,7 +104,7 @@ bool DataCompare(BYTE* pData, BYTE* bSig, const char* szMask)
 
 BYTE* FindPattern(BYTE* dwAddress, const DWORD dwSize, BYTE* pbSig, const char* szMask)
 {
-	DWORD length = strlen(szMask);
+	const DWORD length = strlen(szMask);
 	for (DWORD i = NULL; i < dwSize - length; i++)
 	{
 		__try
@@ -121,20 +121,22 @@ BYTE* FindPattern(BYTE* dwAddress, const DWORD dwSize, BYTE* pbSig, const char* 
 
 DWORD WINAPI KillAds(LPVOID)
 {
-	constexpr auto libcef_str{ L"libcef.dll" };
-	auto hModule = GetModuleHandle(libcef_str);
-	if (!hModule)
-		hModule = LoadLibrary(libcef_str);
+	if (true == g_Logger.read(L"Config", L"BlockAds")) {
+		constexpr auto libcef_str{ L"libcef.dll" };
+		auto hModule = GetModuleHandle(libcef_str);
+		if (!hModule)
+			hModule = LoadLibrary(libcef_str);
 
-	if (hModule)
-	{
-		cef_urlrequest_create_orig = /*cef_urlrequest_create;*/reinterpret_cast<_cef_urlrequest_create>(GetProcAddress(hModule, "cef_urlrequest_create"));
+		if (hModule)
+		{
+			cef_urlrequest_create_orig = /*cef_urlrequest_create;*/reinterpret_cast<_cef_urlrequest_create>(GetProcAddress(hModule, "cef_urlrequest_create"));
 
-		cef_string_userfree_utf16_free_orig = /*_cef_string_userfree_utf16_free;*/reinterpret_cast<_cef_string_userfree_utf16_free>(GetProcAddress(hModule, "cef_string_userfree_utf16_free"));
+			cef_string_userfree_utf16_free_orig = /*_cef_string_userfree_utf16_free;*/reinterpret_cast<_cef_string_userfree_utf16_free>(GetProcAddress(hModule, "cef_string_userfree_utf16_free"));
 
-		if (cef_urlrequest_create_orig && cef_string_userfree_utf16_free_orig) {
-			auto result = Mhook_SetHook(reinterpret_cast<PVOID*>(&cef_urlrequest_create_orig), cef_urlrequest_create_hook);
-			result ? g_Logger.Log(L"libcef.dll patch success!") : g_Logger.Log(L"libcef.dll patch failed!");
+			if (cef_urlrequest_create_orig && cef_string_userfree_utf16_free_orig) {
+				const auto result = Mhook_SetHook(reinterpret_cast<PVOID*>(&cef_urlrequest_create_orig), cef_urlrequest_create_hook);
+				result ? g_Logger.Log(L"libcef.dll patch success!") : g_Logger.Log(L"libcef.dll patch failed!");
+			}
 		}
 	}
 	return 0;
@@ -142,7 +144,7 @@ DWORD WINAPI KillAds(LPVOID)
 
 void WINAPI modify_buffer()
 {
-	auto skipPod = FindPattern((uint8_t*)buff_addr, buff_size, (BYTE*)"{height:122px}}#", "xxxxxxxxxxxxxxxx");
+	const auto skipPod = FindPattern((uint8_t*)buff_addr, buff_size, (BYTE*)"{height:122px}}#", "xxxxxxxxxxxxxxxx");
 	if (skipPod)
 	{
 		memset((char*)skipPod + 8, 0x30, 3); // 122 to 000
@@ -178,23 +180,17 @@ DWORD WINAPI Developer(LPVOID)
 {
 	const HMODULE hModule = GetModuleHandle(NULL);
 	MODULEINFO mInfo = { 0 };
-	if (true == GetModuleInformation(GetCurrentProcess(), hModule, &mInfo, sizeof(MODULEINFO))) {
+	if (TRUE == GetModuleInformation(GetCurrentProcess(), hModule, &mInfo, sizeof(MODULEINFO))) {
 		if (true == g_Logger.read(L"Config", L"Developer")) {
-			auto skipPod = FindPattern((uint8_t*)hModule, mInfo.SizeOfImage, (BYTE*)"\x25\x01\xFF\xFF\xFF\x89\x85\xF8\xFB\xFF\xFF", "xxxxxx???xx");
+			const auto skipPod = FindPattern((uint8_t*)hModule, mInfo.SizeOfImage, (BYTE*)"\x25\x01\xFF\xFF\xFF\x89\x85\xF8\xFB\xFF\xFF", "xxxxxx???xx");
 			if (skipPod)
 			{
 				DWORD oldProtect;
-				VirtualProtect((char*)skipPod + 0, 1, PAGE_EXECUTE_READWRITE, &oldProtect);
-				memset((char*)skipPod + 0, 0xB8, 1);
-				VirtualProtect((char*)skipPod + 0, 1, oldProtect, &oldProtect);
-
-				VirtualProtect((char*)skipPod + 1, 1, PAGE_EXECUTE_READWRITE, &oldProtect);
+				VirtualProtect((char*)skipPod, 5, PAGE_EXECUTE_READWRITE, &oldProtect);
+				memset((char*)skipPod, 0xB8, 1);
 				memset((char*)skipPod + 1, 0x03, 1);
-				VirtualProtect((char*)skipPod + 1, 1, oldProtect, &oldProtect);
-
-				VirtualProtect((char*)skipPod + 2, 3, PAGE_EXECUTE_READWRITE, &oldProtect);
 				memset((char*)skipPod + 2, 0x00, 3);
-				VirtualProtect((char*)skipPod + 2, 3, oldProtect, &oldProtect);
+				VirtualProtect((char*)skipPod, 5, oldProtect, &oldProtect);
 				g_Logger.Log(L"Developer - patch success!");
 			}
 			else {
@@ -210,9 +206,9 @@ DWORD WINAPI KillBanner(LPVOID)
 {
 	const HMODULE hModule = GetModuleHandle(NULL);
 	MODULEINFO mInfo = { 0 };
-	if (true == GetModuleInformation(GetCurrentProcess(), hModule, &mInfo, sizeof(MODULEINFO))) {
+	if (TRUE == GetModuleInformation(GetCurrentProcess(), hModule, &mInfo, sizeof(MODULEINFO))) {
 		if (true == g_Logger.read(L"Config", L"Banner")) {
-			auto skipPod = FindPattern((uint8_t*)hModule, mInfo.SizeOfImage, (BYTE*)"\x8B\x45\xEC\x03\xC7\x50\xFF\xD2\x03\xF8", "xxxxxxxxxx");
+			const auto skipPod = FindPattern((uint8_t*)hModule, mInfo.SizeOfImage, (BYTE*)"\x8B\x45\xEC\x03\xC7\x50\xFF\xD2\x03\xF8", "xxxxxxxxxx");
 			if (skipPod)
 			{
 				const DWORD dwTmp = reinterpret_cast<DWORD>(skipPod) + 3;

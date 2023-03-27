@@ -7,21 +7,13 @@ A multi-purpose adblocker and skip-bypass for the Windows Spotify desktop applic
 
 Please support Spotify by purchasing premium
 
-#### Just copy dpapi.dll into spotify installation folder.
+#### Just copy dpapi.dll and config.ini into spotify installation folder.
 
-###new feature! 
-built-in developer mode, check config.ini to enable it
+### feature! 
+built-in developer mode, enable new theme or old theme
+with many hidden spotify feature
 
-###experiment feature!
+### experiment feature!
 remove black banner without modify xpui.spa
 
-[Config]
-
-;Log system
-
-Log = 0
-
-Developer = 1
-
-Banner = 1
 
