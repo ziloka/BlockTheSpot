@@ -9,14 +9,19 @@ Please support Spotify by purchasing premium
 
 #### Just copy dpapi.dll into spotify installation folder.
 
-new feature! 
+###new feature! 
 built-in developer mode, check config.ini to enable it
 
-experiment feature!
+###experiment feature!
 remove black banner without modify xpui.spa
 
 [Config]
+
 ;Log system
+
 Log = 0
+
 Developer = 1
+
 Banner = 1
+
