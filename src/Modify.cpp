@@ -142,13 +142,11 @@ DWORD WINAPI KillAds(LPVOID)
 
 void WINAPI modify_buffer()
 {
-	if (false == xpui_found) {
-		auto skipPod = FindPattern((uint8_t*)buff_addr, buff_size, (BYTE*)"{height:122px}}#", "xxxxxxxxxxxxxxxx");
-		if (skipPod)
-		{
-			memset((char*)skipPod + 8, 0x30, 3); // 122 to 000
-			xpui_found = true;
-		}
+	auto skipPod = FindPattern((uint8_t*)buff_addr, buff_size, (BYTE*)"{height:122px}}#", "xxxxxxxxxxxxxxxx");
+	if (skipPod)
+	{
+		memset((char*)skipPod + 8, 0x30, 3); // 122 to 000
+		xpui_found = true;
 	}
 }
 
@@ -161,6 +159,8 @@ __declspec(naked) void hook_zip_buffer()
 		push eax;
 		call edx;
 		mov buff_size, eax;
+		cmp xpui_found, 0;
+		jne skip;
 		//------------ preparation --------------------
 		pushad;
 		//------------ function call ------------------
@@ -168,12 +168,45 @@ __declspec(naked) void hook_zip_buffer()
 		//------------ end call ------------------
 		popad;
 		//------------ finish -------------------------
+		skip:
 		push ret_addr;
 		retn;
 	}
 }
 
 DWORD WINAPI Developer(LPVOID)
+{
+	const HMODULE hModule = GetModuleHandle(NULL);
+	MODULEINFO mInfo = { 0 };
+	if (true == GetModuleInformation(GetCurrentProcess(), hModule, &mInfo, sizeof(MODULEINFO))) {
+		if (true == g_Logger.read(L"Config", L"Developer")) {
+			auto skipPod = FindPattern((uint8_t*)hModule, mInfo.SizeOfImage, (BYTE*)"\x25\x01\xFF\xFF\xFF\x89\x85\xF8\xFB\xFF\xFF", "xxxxxx???xx");
+			if (skipPod)
+			{
+				DWORD oldProtect;
+				VirtualProtect((char*)skipPod + 0, 1, PAGE_EXECUTE_READWRITE, &oldProtect);
+				memset((char*)skipPod + 0, 0xB8, 1);
+				VirtualProtect((char*)skipPod + 0, 1, oldProtect, &oldProtect);
+
+				VirtualProtect((char*)skipPod + 1, 1, PAGE_EXECUTE_READWRITE, &oldProtect);
+				memset((char*)skipPod + 1, 0x03, 1);
+				VirtualProtect((char*)skipPod + 1, 1, oldProtect, &oldProtect);
+
+				VirtualProtect((char*)skipPod + 2, 3, PAGE_EXECUTE_READWRITE, &oldProtect);
+				memset((char*)skipPod + 2, 0x00, 3);
+				VirtualProtect((char*)skipPod + 2, 3, oldProtect, &oldProtect);
+				g_Logger.Log(L"Developer - patch success!");
+			}
+			else {
+				g_Logger.Log(L"Developer - patch failed!");
+			}
+		}
+	}
+	return 0;
+}
+
+
+DWORD WINAPI KillBanner(LPVOID)
 {
 	const HMODULE hModule = GetModuleHandle(NULL);
 	MODULEINFO mInfo = { 0 };
@@ -196,35 +229,7 @@ DWORD WINAPI Developer(LPVOID)
 			else {
 				g_Logger.Log(L"Banner - patch failed!");
 			}
-
 		}
-
-		if (true == g_Logger.read(L"Config", L"Developer")) {
-			auto skipPod = FindPattern((uint8_t*)hModule, mInfo.SizeOfImage, (BYTE*)"\x25\x01\xFF\xFF\xFF\x89\x85\xF8\xFB\xFF\xFF", "xxxxxx???xx");
-			if (skipPod)
-			{
-				DWORD oldProtect;
-				VirtualProtect((char*)skipPod + 0, 1, PAGE_EXECUTE_READWRITE, &oldProtect);
-				memset((char*)skipPod + 0, 0xB8, 1);
-				VirtualProtect((char*)skipPod + 0, 1, oldProtect, &oldProtect);
-
-				VirtualProtect((char*)skipPod + 1, 1, PAGE_EXECUTE_READWRITE, &oldProtect);
-				memset((char*)skipPod + 1, 0x03, 1);
-				VirtualProtect((char*)skipPod + 1, 1, oldProtect, &oldProtect);
-
-				VirtualProtect((char*)skipPod + 2, 3, PAGE_EXECUTE_READWRITE, &oldProtect);
-				memset((char*)skipPod + 2, 0x00, 3);
-				VirtualProtect((char*)skipPod + 2, 3, oldProtect, &oldProtect);
-				g_Logger.Log(L"Developer - patch success!");
-			}
-			else {
-				g_Logger.Log(L"Developer - patch failed!");
-			}
-
-		}
-	}
-	else {
-		g_Logger.Log(L"GetModuleInformation - failed!");
 	}
 	return 0;
 }
