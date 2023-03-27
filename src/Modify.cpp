@@ -28,6 +28,9 @@ static _cef_urlrequest_create cef_urlrequest_create_orig;
 static _cef_string_userfree_utf16_free cef_string_userfree_utf16_free_orig;
 
 static constexpr auto block_list = { L"/ads/", L"/ad-logic/", L"/gabo-receiver-service/" };
+static constexpr auto localhost_str = "localhost";
+//static constexpr auto premium_str = "\"premium\"                   }";
+static constexpr auto premium_free_str = "\"premium\"===e.session?.productState?.catalogue?.toLowerCase(),s=e=>null!==e.session?.productState&&1===parseInt(e.session.productState.ads,10),r=e=>\"free\"===e.session?.productState?.catalogue?.toLowerCase(),";
 //static constexpr char search_str[] = {0x61,0x70,0x70,0x2D,0x64,0x65,0x76,0x65,0x6C,0x6F,0x70,0x65,0x72,0x09,0x01,0x30,0x78};
 
 static bool xpui_found = false;
@@ -144,12 +147,36 @@ DWORD WINAPI KillAds(LPVOID)
 
 void WINAPI modify_buffer()
 {
-	const auto skipPod = FindPattern((uint8_t*)buff_addr, buff_size, (BYTE*)"{height:122px}}#", "xxxxxxxxxxxxxxxx");
-	if (skipPod)
+	const auto skipads = FindPattern((uint8_t*)buff_addr, buff_size, (BYTE*)"adsEnabled:!0", "xxxxxxxxxxxxx");
+	if (skipads)
 	{
-		memset((char*)skipPod + 8, 0x30, 3); // 122 to 000
-		xpui_found = true;
+		memset((char*)skipads + 12, 0x31, 1); // 122 to 000
+		g_Logger.Log(L"adsEnabled patched!");
 	}
+	const auto skipsentry = FindPattern((uint8_t*)buff_addr, buff_size, (BYTE*)"sentry.io", "xxxxxxxxx");
+	if (skipsentry)
+	{
+		for (size_t i = 0; i < strnlen_s(localhost_str, 15); i++) {
+			memset((char*)skipsentry + i, localhost_str[i], 1);
+		}
+		g_Logger.Log(L"sentry.io -> localhost patched!");
+	}
+	const auto ishptohidden = FindPattern((uint8_t*)buff_addr, buff_size, (BYTE*)"isHptoHidden:!0", "xxxxxxxxxxxxxxx");
+	if (ishptohidden)
+	{
+		memset((char*)ishptohidden + 14, 0x31, 1); // 122 to 000
+		g_Logger.Log(L"isHptoHidden patched!");
+	}
+	const auto premium_free = FindPattern((uint8_t*)buff_addr, buff_size, (BYTE*)"\"free\"===e.session?.productState?.catalogue?.toLowerCase(),s=e=>null!==e.session?.productState&&1===parseInt(e.session.productState.ads,10),r=e=>\"premium\"===e.session?.productState?.catalogue?.toLowerCase(),", 
+		"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+	if (premium_free)
+	{
+		for (size_t i = 0; i < strnlen_s(premium_free_str, 210); i++) {
+			memset((char*)premium_free + i, premium_free_str[i], 1);
+		}
+		g_Logger.Log(L"premium patched!");
+	}
+	xpui_found = true;
 }
 
 __declspec(naked) void hook_zip_buffer()
