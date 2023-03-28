@@ -29,7 +29,7 @@ static _cef_string_userfree_utf16_free cef_string_userfree_utf16_free_orig;
 
 static constexpr auto block_list = { L"/ads/", L"/ad-logic/", L"/gabo-receiver-service/" };
 static constexpr auto localhost_str = "localhost";
-//static constexpr auto premium_str = "\"premium\"                   }";
+static constexpr auto sp_localhost_str = "sp://localhost//";
 static constexpr auto premium_free_str = "\"premium\"===e.session?.productState?.catalogue?.toLowerCase(),s=e=>null!==e.session?.productState&&1===parseInt(e.session.productState.ads,10),r=e=>\"free\"===e.session?.productState?.catalogue?.toLowerCase(),";
 //static constexpr char search_str[] = {0x61,0x70,0x70,0x2D,0x64,0x65,0x76,0x65,0x6C,0x6F,0x70,0x65,0x72,0x09,0x01,0x30,0x78};
 
@@ -168,6 +168,15 @@ void WINAPI modify_buffer()
 		memset((char*)ishptohidden + 14, 0x31, 1); // 122 to 000
 		g_Logger.Log(L"isHptoHidden patched!");
 	}
+	const auto sp_localhost = FindPattern((uint8_t*)buff_addr, buff_size, (BYTE*)"sp://ads/v1/ads/", "xxxxxxxxxxxxxxxx");
+	if (sp_localhost)
+	{
+		for (size_t i = 0; i < strnlen_s(sp_localhost_str, 19); i++) {
+			memset((char*)sp_localhost + i, sp_localhost_str[i], 1);
+		}
+		g_Logger.Log(L"sp://ads/v1/ads/ patched!");
+	}
+
 	const auto premium_free = FindPattern((uint8_t*)buff_addr, buff_size, (BYTE*)"\"free\"===e.session?.productState?.catalogue?.toLowerCase(),s=e=>null!==e.session?.productState&&1===parseInt(e.session.productState.ads,10),r=e=>\"premium\"===e.session?.productState?.catalogue?.toLowerCase(),", 
 		"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
 	if (premium_free)
