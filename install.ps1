@@ -229,38 +229,12 @@ if (-not $spotifyInstalled -or $UpdateSpotify -or $unsupportedClientVersion)
     Start-Sleep -Milliseconds 100
   }
 
-  # Create a Shortcut to Spotify in %APPDATA%\Microsoft\Windows\Start Menu\Programs and Desktop
-  # (allows the program to be launched from search and desktop)
-  $wshShell = New-Object -ComObject WScript.Shell
-
-  $desktopShortcutPath = "$env:USERPROFILE\Desktop\Spotify.lnk"
-  if ((Test-Path $desktopShortcutPath) -eq $false)
-  {
-    $desktopShortcut = $wshShell.CreateShortcut($desktopShortcutPath)
-    $desktopShortcut.TargetPath = "$env:APPDATA\Spotify\Spotify.exe"
-    $desktopShortcut.Save()
-  }
-
-  $startMenuShortcutPath = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Spotify.lnk"
-  if ((Test-Path $startMenuShortcutPath) -eq $false)
-  {
-    $startMenuShortcut = $wshShell.CreateShortcut($startMenuShortcutPath)
-    $startMenuShortcut.TargetPath = "$env:APPDATA\Spotify\Spotify.exe"
-    $startMenuShortcut.Save()
-  }
-
 
   Write-Host 'Stopping Spotify...Again'
 
   Stop-Process -Name Spotify
   Stop-Process -Name SpotifyWebHelper
   Stop-Process -Name SpotifyFullSetup
-}
-$dllBackupFilePath = Join-Path -Path $spotifyDirectory -ChildPath 'dpapi_bak.dll'
-$dllFilePath = Join-Path -Path $spotifyDirectory -ChildPath 'dpapi.dll'
-if ((Test-Path $dllBackupFilePath) -eq $false)
-{
-  Move-Item -LiteralPath "$dllFilePath" -Destination "$dllBackupFilePath" | Write-Verbose
 }
 
 Write-Host 'Patching Spotify...'
