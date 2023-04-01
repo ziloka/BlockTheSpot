@@ -37,12 +37,13 @@ or
 #### Manual installation
 
 1. Browse to your Spotify installation folder `%APPDATA%\Spotify`
-2. Rename `dpapi.dll` to `dpapi_bak.dll`. The naming is important.
-3. Download `chrome_elf.zip` from [releases](https://github.com/mrpond/BlockTheSpot/releases)
-4. Unzip `dpapi.dll` and `config.ini` to Spotify directory. 
+2. Download `chrome_elf.zip` from [releases](https://github.com/mrpond/BlockTheSpot/releases)
+3. Unzip `dpapi.dll` and `config.ini` to Spotify directory. 
 
 ### Uninstall:
 * Just run [uninstall.bat](https://raw.githack.com/mrpond/BlockTheSpot/master/uninstall.bat)
+or
+* Remove `dpapi.dll` and `config.ini` from Spotify directory.
 or
 * Reinstall Spotify
 
