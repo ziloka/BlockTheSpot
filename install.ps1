@@ -10,7 +10,7 @@ param (
 # Ignore errors from `Stop-Process`
 $PSDefaultParameterValues['Stop-Process:ErrorAction'] = [System.Management.Automation.ActionPreference]::SilentlyContinue
 
-[System.Version] $minimalSupportedSpotifyVersion = '1.1.73.517'
+[System.Version] $minimalSupportedSpotifyVersion = '1.2.8.923'
 
 function Get-File
 {

@@ -5,21 +5,17 @@
     <h4 align="center">A multi-purpose adblocker and skip-bypass for the <strong>Windows</strong> Spotify desktop application.</h4>
     <h5 align="center">Please support Spotify by purchasing premium</h5>
     <p align="center">
-        <strong>Last updated:</strong> 29 October 2021<br>
-        <strong>Last tested version:</strong> 1.1.87.612.gf8d110e2
+        <strong>Last updated:</strong> 01 April 2023<br>
+        <strong>Last tested version:</strong> 1.2.8.923.g4f94bf0d
     </p> 
 </center>
-
-#### Important checks before installing:
-0. Update Windows, update Spotify and update BlockTheSpot
-1. Go to "Windows Security" -> "Virus & Threat Protection"
-2. Click "Allowed threats" -> "Remove all allowed threats"
 
 ### Features:
 * Unlocks all premium features except downloads.
 * Lives through Spotify updates. No need to patch Spotify after every update anymore.
 
 #### Experimental features from developer mode
+- Click on the 2 dots in the top left corner of Spotify > Develop > Show debug window. Play around with the options.
 - Enable/disable feature by yourself in realtime and on demand.
 - Choose old/new theme(YLX).
 - Enable right sidebar.
