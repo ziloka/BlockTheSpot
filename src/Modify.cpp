@@ -30,10 +30,14 @@ static _cef_string_userfree_utf16_free cef_string_userfree_utf16_free_orig;
 static constexpr auto block_list = { L"/ads/", L"/ad-logic/", L"/gabo-receiver-service/" };
 static constexpr auto localhost_str = "localhost";
 static constexpr auto sp_localhost_str = "sp://localhost//";
-static constexpr auto premium_free_str = "\"premium\"===e.session?.productState?.catalogue?.toLowerCase(),s=e=>null!==e.session?.productState&&1===parseInt(e.session.productState.ads,10),r=e=>\"free\"===e.session?.productState?.catalogue?.toLowerCase(),";
+static constexpr auto premium_free_str = "\"premium\"===e.session?.productState?.catalogue?.toLowerCase(),s=e=>null!==e.session?.productState&&1===parseInt(e.session?.productState?.ads,10),r=e=>\"free\"";
 //static constexpr char search_str[] = {0x61,0x70,0x70,0x2D,0x64,0x65,0x76,0x65,0x6C,0x6F,0x70,0x65,0x72,0x09,0x01,0x30,0x78};
+static constexpr auto sponsorship_str = ".set(\"allSponsorships\",t.sponsorships)}}(e,t);";
+static constexpr auto hpto_str = ".WiPggcPDzbwGxoxwLWFf{-webkit-box-pack:center;-ms-flex-pack:center;display:-webkit-box;display:-ms-flexbox;display:none;";
+
 
 static bool xpui_found = false;
+static bool hptocss_found = false;
 static DWORD ret_addr = 0;
 static DWORD buff_addr = 0;
 static DWORD buff_size = 0;
@@ -145,6 +149,20 @@ DWORD WINAPI KillAds(LPVOID)
 	return 0;
 }
 
+void WINAPI modify_buffer2()
+{
+	const auto hpto = FindPattern((uint8_t*)buff_addr, buff_size, (BYTE*)".WiPggcPDzbwGxoxwLWFf{-webkit-box-pack:center;-ms-flex-pack:center;display:-webkit-box;display:-ms-flexbox;display:flex;",
+		"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+	if (hpto)
+	{
+		for (size_t i = 0; i < strnlen_s(hpto_str, 200); i++) {
+			memset((char*)hpto + i, hpto_str[i], 1);
+		}
+		g_Logger.Log(L"hptocss patched!");
+		hptocss_found = true;
+	}
+}
+
 void WINAPI modify_buffer()
 {
 	const auto skipads = FindPattern((uint8_t*)buff_addr, buff_size, (BYTE*)"adsEnabled:!0", "xxxxxxxxxxxxx");
@@ -153,6 +171,14 @@ void WINAPI modify_buffer()
 		memset((char*)skipads + 12, 0x31, 1); // 122 to 000
 		g_Logger.Log(L"adsEnabled patched!");
 		xpui_found = true;
+	}
+	const auto sponsorship = FindPattern((uint8_t*)buff_addr, buff_size, (BYTE*)".set(\"allSponsorships\",t.sponsorships)}}(e,t);",
+		"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+	if (sponsorship)
+	{
+		memset((char*)sponsorship + 6, 0x22, 1); // 122 to 000
+		memset((char*)sponsorship + 7, 0x20, 15); // 122 to 000
+		g_Logger.Log(L"sponsorship patched!");
 	}
 	const auto skipsentry = FindPattern((uint8_t*)buff_addr, buff_size, (BYTE*)"sentry.io", "xxxxxxxxx");
 	if (skipsentry)
@@ -168,6 +194,12 @@ void WINAPI modify_buffer()
 		memset((char*)ishptohidden + 14, 0x31, 1); // 122 to 000
 		g_Logger.Log(L"isHptoHidden patched!");
 	}
+	const auto ishptoenable = FindPattern((uint8_t*)buff_addr, buff_size, (BYTE*)"hptoEnabled:!0", "xxxxxxxxxxxxxx");
+	if (ishptoenable)
+	{
+		memset((char*)ishptoenable + 13, 0x31, 1); // 122 to 000
+		g_Logger.Log(L"hptoEnabled patched!");
+	}
 	const auto sp_localhost = FindPattern((uint8_t*)buff_addr, buff_size, (BYTE*)"sp://ads/v1/ads/", "xxxxxxxxxxxxxxxx");
 	if (sp_localhost)
 	{
@@ -177,11 +209,11 @@ void WINAPI modify_buffer()
 		g_Logger.Log(L"sp://ads/v1/ads/ patched!");
 	}
 
-	const auto premium_free = FindPattern((uint8_t*)buff_addr, buff_size, (BYTE*)"\"free\"===e.session?.productState?.catalogue?.toLowerCase(),s=e=>null!==e.session?.productState&&1===parseInt(e.session.productState.ads,10),r=e=>\"premium\"===e.session?.productState?.catalogue?.toLowerCase(),", 
-		"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+	const auto premium_free = FindPattern((uint8_t*)buff_addr, buff_size, (BYTE*)"\"free\"===e.session?.productState?.catalogue?.toLowerCase(),s=e=>null!==e.session?.productState&&1===parseInt(e.session?.productState?.ads,10),r=e=>\"premium\"",
+		"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
 	if (premium_free)
 	{
-		for (size_t i = 0; i < strnlen_s(premium_free_str, 210); i++) {
+		for (size_t i = 0; i < strnlen_s(premium_free_str, 200); i++) {
 			memset((char*)premium_free + i, premium_free_str[i], 1);
 		}
 		g_Logger.Log(L"premium patched!");
@@ -206,7 +238,17 @@ __declspec(naked) void hook_zip_buffer()
 		//------------ end call ------------------
 		popad;
 		//------------ finish -------------------------
-		skip:
+	skip:
+		cmp hptocss_found, 0;
+		jne skip2;
+		//------------ preparation --------------------
+		pushad;
+		//------------ function call ------------------
+		call modify_buffer2;
+		//------------ end call ------------------
+		popad;
+		//------------ finish -------------------------
+	skip2:
 		push ret_addr;
 		retn;
 	}
