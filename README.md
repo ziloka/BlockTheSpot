@@ -1,4 +1,4 @@
-[![Build status](https://ci.appveyor.com/api/projects/status/31l6ynm0a1fhr2vs/branch/master?svg=true)](https://ci.appveyor.com/project/mrpond/blockthespot/branch/master)  [![Discord](https://discord.com/api/guilds/807273906872123412/widget.png)](https://discord.gg/p43cusgUPm)
+[![Build status](https://ci.appveyor.com/api/projects/status/31l6ynm0a1fhr2vs/branch/master?svg=true)](https://ci.appveyor.com/project/mrpond/blockthespot/branch/master)  [![Discord](https://discord.com/api/guilds/807273906872123412/widget.png)](https://discord.gg/eYudMwgYtY)
 
 <center>
     <h1 align="center">BlockTheSpot</h1>
@@ -52,7 +52,7 @@ or
 * Installation script automatically detects if your Spotify client version is supported, or not. If the version is not supported, you will be prompted to update your Spotify client. To enforce client update, supply an optional parameter `UpdateSpotify` to the installation script. 
 * [Spicetify](https://github.com/khanhas/spicetify-cli) users will need to reapply BlockTheSpot after applying a Spicetify themes/patches.
 * If the automatic install/uninstall scripts do not work, please contact [Nuzair46](https://github.com/Nuzair46).
-* For more support and discussions, join our [Discord server](https://discord.gg/p43cusgUPm).
+* For more support and discussions, join our [Discord server](https://discord.gg/eYudMwgYtY).
 
 
 
