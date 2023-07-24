@@ -1,54 +1,39 @@
+﻿#include "pch.h"
 
-#include "Modify.h"
-#include "Logger.h"
-#include <array>
-#ifndef NDEBUG
-#include <include/capi/cef_urlrequest_capi.h>
-#endif
 /*
-*
+* 
 * Black banner still show even libcef hooked.
-*
+* 
 */
 
-static Logger g_Logger;
 //using _cef_urlrequest_create = cef_urlrequest_t * (*)(struct _cef_request_t* request,
 //	struct _cef_urlrequest_client_t* client,
 //	struct _cef_request_context_t* request_context);
 
-using _cef_urlrequest_create = void* (*)(void* request,
-	void* client,
-	void* request_context);
-
-using _cef_string_userfree_utf16_free = void* (*)(/*void* str*/void* addr);
-
-
+using _cef_urlrequest_create = void* (*)(void* request, void* client, void* request_context);
 static _cef_urlrequest_create cef_urlrequest_create_orig;
 
+using _cef_string_userfree_utf16_free = void * (*)(/*void* str*/void* addr);
 static _cef_string_userfree_utf16_free cef_string_userfree_utf16_free_orig;
 
-static constexpr auto block_list = { L"/ads/", L"/ad-logic/", L"/gabo-receiver-service/" };
-static constexpr auto localhost_str = "localhost";
-static constexpr auto sp_localhost_str = "sp://localhost//";
-static constexpr auto premium_free_str = "\"premium\"===e.session?.productState?.catalogue?.toLowerCase(),s=e=>null!==e.session?.productState&&1===parseInt(e.session?.productState?.ads,10),r=e=>\"free\"";
-//static constexpr char search_str[] = {0x61,0x70,0x70,0x2D,0x64,0x65,0x76,0x65,0x6C,0x6F,0x70,0x65,0x72,0x09,0x01,0x30,0x78};
-static constexpr auto sponsorship_str = ".set(\"allSponsorships\",t.sponsorships)}}(e,t);";
-static constexpr auto hpto_str = ".WiPggcPDzbwGxoxwLWFf{-webkit-box-pack:center;-ms-flex-pack:center;display:-webkit-box;display:-ms-flexbox;display:none;";
+static constexpr std::array<std::wstring_view, 3> block_list = { L"/ads/", L"/ad-logic/", L"/gabo-receiver-service/" };
 
+//static DWORD ret_addr = 0;
+PatternScanner::ModuleInfo ZipScan;
 
-static bool xpui_found = false;
-static bool hptocss_found = false;
-static DWORD ret_addr = 0;
-static DWORD buff_addr = 0;
-static DWORD buff_size = 0;
-
+#ifdef _WIN64
+static std::wstring file_name;
+std::uint64_t file_name_rcx = 0;
+std::uint64_t ret_addr_file_name = 0;
+std::uint64_t ret_addr_file_source = 0;
+#else
 DWORD WINAPI get_url(DWORD pRequest)
 {
-	DWORD retval;
+	DWORD retval = 0;
 	__asm
 	{
 		mov eax, pRequest
-		mov ecx, dword ptr ds : [eax + 0x18]
+		mov ecx, dword ptr ds:[eax+0x18]
 		mov edx, eax
 		push edx
 		call ecx
@@ -57,10 +42,9 @@ DWORD WINAPI get_url(DWORD pRequest)
 	return retval;
 }
 
-
 DWORD WINAPI get_str(DWORD pRequest)
 {
-	DWORD retval;
+	DWORD retval = 0;
 	__asm
 	{
 		// get url str
@@ -70,240 +54,347 @@ DWORD WINAPI get_str(DWORD pRequest)
 	}
 	return retval;
 }
+#endif
+
 #ifndef NDEBUG
-void* cef_urlrequest_create_hook(struct _cef_request_t* request, void* client, void* request_context)
+void* cef_urlrequest_create_hook (struct _cef_request_t* request, void* client, void* request_context)
 #else
 void* cef_urlrequest_create_hook(void* request, void* client, void* request_context)
 #endif
 {
 #ifndef NDEBUG
-	cef_string_utf16_t* url_utf16 = request->get_url(request);
+	cef_string_utf16_t* url_utf16 = request->get_url (request);
 	std::wstring url(url_utf16->str);
+#else
+
+#ifdef _WIN64
+	auto get_url = *(std::uint64_t(__fastcall**)(std::uint64_t))((std::uint64_t)request + 48);
+	auto url_utf16 = get_url((std::uint64_t)request);
+	std::wstring url(reinterpret_cast<wchar_t*>(*reinterpret_cast<wchar_t**>(url_utf16)));
 #else
 	auto url_utf16 = get_url(reinterpret_cast<DWORD>(request));
 	std::wstring url(reinterpret_cast<wchar_t*>(get_str(url_utf16)));
 #endif
-	cef_string_userfree_utf16_free_orig(reinterpret_cast<void*>(url_utf16));
+	
+#endif
+	for (const auto& blockurl : block_list) {
+		if (std::wstring_view::npos != url.find (blockurl)) {
+			Logger::Log(L"blocked - " + url, Logger::LogLevel::Info);
+			//cef_string_userfree_utf16_free(url_utf16);
+			cef_string_userfree_utf16_free_orig((void*)url_utf16);
+			return nullptr;
+		}
+	}
 	//cef_string_userfree_utf16_free(url_utf16);
-	for (auto blockurl : block_list) {
-		if (std::wstring_view::npos != url.find(blockurl)) {
-			g_Logger.Log(L"blocked - " + url);
-
-			return nullptr;
-		}
-	}
-
-	g_Logger.Log(L"allow - " + url);
-	return cef_urlrequest_create_orig(request, client, request_context);
+	cef_string_userfree_utf16_free_orig((void*)url_utf16);
+	Logger::Log(L"allow - " + url, Logger::LogLevel::Info);
+	return cef_urlrequest_create_orig (request, client, request_context);
 }
 
-
-// https://www.unknowncheats.me/forum/1064672-post23.html
-bool DataCompare(BYTE* pData, BYTE* bSig, const char* szMask)
+void WINAPI get_file_name()
 {
-	for (; *szMask; ++szMask, ++pData, ++bSig)
-	{
-		if (*szMask == 'x' && *pData != *bSig)
-			return false;
+	try {
+		file_name = *reinterpret_cast<wchar_t**>(file_name_rcx);
+		//MessageBoxW(0,file_name.c_str(), 0, 0);
+		//Print(L"{}", zip_file_name);
+		//system("pause");
 	}
-	return (*szMask) == NULL;
+	catch (const std::exception& e) {
+		Print({ Color::Red }, L"[{}] {}", L"ERROR", e.what());
+	}
 }
 
-BYTE* FindPattern(BYTE* dwAddress, const DWORD dwSize, BYTE* pbSig, const char* szMask)
+void WINAPI modify_source()
 {
-	const DWORD length = strlen(szMask);
-	for (DWORD i = NULL; i < dwSize - length; i++)
-	{
-		__try
+	try {
+		if (file_name == L"home-hpto.css")
 		{
-			if (DataCompare(dwAddress + i, pbSig, szMask))
-				return dwAddress + i;
+			//Print(L"{}", zip_file_name);
+			const auto hpto = PatternScanner::ScanFirst(ZipScan.base_address, ZipScan.image_size, L".WiPggcPDzbwGxoxwLWFf{-webkit-box-pack:center;-ms-flex-pack:center;display:-webkit-box;display:-ms-flexbox;display:flex;");
+			if (hpto.is_found()) {
+				if (Memory::Write<const char*>(hpto.data(), ".WiPggcPDzbwGxoxwLWFf{-webkit-box-pack:center;-ms-flex-pack:center;display:-webkit-box;display:-ms-flexbox;display:none;")) {
+					Logger::Log(L"hptocss patched!", Logger::LogLevel::Info);
+				}
+				else {
+					Logger::Log(L"hptocss patch failed!", Logger::LogLevel::Error);
+				}
+			}
+			else {
+				Logger::Log(L"hptocss - failed not found!", Logger::LogLevel::Error);
+			}
 		}
-		__except (EXCEPTION_EXECUTE_HANDLER) {
-			return nullptr;
-		}
-	}
-	return 0;
-}
 
-DWORD WINAPI KillAds(LPVOID)
-{
-	if (true == g_Logger.read(L"Config", L"BlockAds")) {
-		constexpr auto libcef_str{ L"libcef.dll" };
-		auto hModule = GetModuleHandle(libcef_str);
-		if (!hModule)
-			hModule = LoadLibrary(libcef_str);
-
-		if (hModule)
+		if (file_name == L"xpui-routes-profile.js")
 		{
-			cef_urlrequest_create_orig = /*cef_urlrequest_create;*/reinterpret_cast<_cef_urlrequest_create>(GetProcAddress(hModule, "cef_urlrequest_create"));
+			//Print(L"{}", zip_file_name);
+			const auto isModalOpen = PatternScanner::ScanAll(ZipScan.base_address, ZipScan.image_size, L"isModalOpen:!0");
+			if (isModalOpen[0].is_found()) {
+				for (const auto& it : isModalOpen) {
+					if (Memory::Write<const char>(it.offset(13).data(), '1')) {
+						Logger::Log(L"isModalOpen patched!", Logger::LogLevel::Info);
+					}
+					else {
+						Logger::Log(L"isModalOpen - patch failed!", Logger::LogLevel::Error);
+					}
+				}
+			}
+			else {
+				Logger::Log(L"isModalOpen - failed not found!", Logger::LogLevel::Error);
+			}
+		}
 
-			cef_string_userfree_utf16_free_orig = /*_cef_string_userfree_utf16_free;*/reinterpret_cast<_cef_string_userfree_utf16_free>(GetProcAddress(hModule, "cef_string_userfree_utf16_free"));
+		if (file_name == L"xpui.js")
+		{
+			//Print(L"{}", zip_file_name);
+			const auto skipads = PatternScanner::ScanFirst(ZipScan.base_address, ZipScan.image_size, L"adsEnabled:!0");
+			if (skipads.is_found()) {
+				if (Memory::Write<const char>(skipads.offset(12).data(), '1')) {
+					Logger::Log(L"adsEnabled patched!", Logger::LogLevel::Info);
+				}
+				else {
+					Logger::Log(L"adsEnabled - patch failed!", Logger::LogLevel::Error);
+				}
+			}
+			else {
+				Logger::Log(L"adsEnabled - failed not found!", Logger::LogLevel::Error);
+			}
 
-			if (cef_urlrequest_create_orig && cef_string_userfree_utf16_free_orig) {
-				const auto result = Mhook_SetHook(reinterpret_cast<PVOID*>(&cef_urlrequest_create_orig), cef_urlrequest_create_hook);
-				result ? g_Logger.Log(L"libcef.dll patch success!") : g_Logger.Log(L"libcef.dll patch failed!");
+			const auto sponsorship = PatternScanner::ScanFirst(ZipScan.base_address, ZipScan.image_size, L".set(\"allSponsorships\",t.sponsorships)}}(e,t);");
+			if (sponsorship.is_found())
+			{
+				memset((char*)sponsorship.data() + 6, 0x22, 1);
+				memset((char*)sponsorship.data() + 7, 0x20, 15);
+				Logger::Log(L"sponsorship patched!", Logger::LogLevel::Info);
+				//if (Memory::Write<char>(sponsorship.offset(6).data(), ' ', 15)) {
+				//	Logger::Log(L"sponsorship patched!", Logger::LogLevel::Info);
+				//}
+				//else {
+				//	Logger::Log(L"sponsorship patch failed!", Logger::LogLevel::Error);
+				//}
+			}
+			else {
+				Logger::Log(L"sponsorship - failed not found!", Logger::LogLevel::Error);
+			}
+
+			const auto skipsentry = PatternScanner::ScanFirst(ZipScan.base_address, ZipScan.image_size, L"sentry.io");
+			if (skipsentry.is_found()) {
+				if (Memory::Write<const char*>(skipsentry.data(), "localhost")) {
+					Logger::Log(L"sentry.io -> localhost patched!", Logger::LogLevel::Info);
+				}
+				else {
+					Logger::Log(L"sentry.io -> localhost - patch failed!", Logger::LogLevel::Error);
+				}
+			}
+			else {
+				Logger::Log(L"sentry.io -> localhost - failed not found!", Logger::LogLevel::Error);
+			}
+
+			const auto ishptoenable = PatternScanner::ScanFirst(ZipScan.base_address, ZipScan.image_size, L"hptoEnabled:!0");
+			if (ishptoenable.is_found())
+			{
+				if (Memory::Write<const char>(ishptoenable.offset(13).data(), '1')) {
+					Logger::Log(L"hptoEnabled patched!", Logger::LogLevel::Info);
+				}
+				else {
+					Logger::Log(L"hptoEnabled - patch failed!", Logger::LogLevel::Error);
+				}
+			}
+			else {
+				Logger::Log(L"hptoEnabled - failed not found!", Logger::LogLevel::Error);
+			}
+
+			const auto ishptohidden = PatternScanner::ScanFirst(ZipScan.base_address, ZipScan.image_size, L"isHptoHidden:!0");
+			if (ishptohidden.is_found()) {
+				if (Memory::Write<const char>(ishptohidden.offset(14).data(), '1')) {
+					Logger::Log(L"isHptoHidden patched!", Logger::LogLevel::Info);
+				}
+				else {
+					Logger::Log(L"isHptoHidden - patch failed!", Logger::LogLevel::Error);
+				}
+			}
+			else {
+				Logger::Log(L"isHptoHidden - failed not found!", Logger::LogLevel::Error);
+			}
+
+			const auto sp_localhost = PatternScanner::ScanFirst(ZipScan.base_address, ZipScan.image_size, L"sp://ads/v1/ads/");
+			if (sp_localhost.is_found()) {
+				if (Memory::Write<const char*>(sp_localhost.data(), "sp://localhost//")) {
+					Logger::Log(L"sp://ads/v1/ads/ patched!", Logger::LogLevel::Info);
+				}
+				else {
+					Logger::Log(L"sp://ads/v1/ads/ - patch failed!", Logger::LogLevel::Error);
+				}
+			}
+			else {
+				Logger::Log(L"sp://ads/v1/ads/ - failed not found!", Logger::LogLevel::Error);
+			}
+
+			const auto premium_free = PatternScanner::ScanFirst(ZipScan.base_address, ZipScan.image_size, L"\"free\"===e.session?.productState?.catalogue?.toLowerCase(),r=e=>null!==e.session?.productState&&1===parseInt(e.session?.productState?.ads,10),o=e=>\"premium\"===e.session?.productState?.catalogue?.toLowerCase(),");
+			if (premium_free.is_found()) {
+				//Print(L"{}", premium_free.read<const char*>());
+				//system("pause");
+				if (Memory::Write<const char*>(premium_free.data(), "\"premium\"===e.session?.productState?.catalogue?.toLowerCase(),r=e=>null!==e.session?.productState&&1===parseInt(e.session?.productState?.ads,10),o=e=>\"free\"===e.session?.productState?.catalogue?.toLowerCase(),")) {
+					Logger::Log(L"premium patched!", Logger::LogLevel::Info);
+				}
+				else {
+					Logger::Log(L"premium - patch failed!", Logger::LogLevel::Error);
+				}
+			}
+			else {
+				Logger::Log(L"premium - failed not found!", Logger::LogLevel::Error);
 			}
 		}
 	}
-	return 0;
-}
-
-void WINAPI modify_buffer2()
-{
-	const auto hpto = FindPattern((uint8_t*)buff_addr, buff_size, (BYTE*)".WiPggcPDzbwGxoxwLWFf{-webkit-box-pack:center;-ms-flex-pack:center;display:-webkit-box;display:-ms-flexbox;display:flex;",
-		"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-	if (hpto)
-	{
-		for (size_t i = 0; i < strnlen_s(hpto_str, 200); i++) {
-			memset((char*)hpto + i, hpto_str[i], 1);
-		}
-		g_Logger.Log(L"hptocss patched!");
-		hptocss_found = true;
+	catch (const std::exception& e) {
+		Print({ Color::Red }, L"[{}] {}", L"ERROR", e.what());
 	}
 }
 
-void WINAPI modify_buffer()
-{
-	const auto skipads = FindPattern((uint8_t*)buff_addr, buff_size, (BYTE*)"adsEnabled:!0", "xxxxxxxxxxxxx");
-	if (skipads)
-	{
-		memset((char*)skipads + 12, 0x31, 1); // 122 to 000
-		g_Logger.Log(L"adsEnabled patched!");
-		xpui_found = true;
-	}
-	const auto sponsorship = FindPattern((uint8_t*)buff_addr, buff_size, (BYTE*)".set(\"allSponsorships\",t.sponsorships)}}(e,t);",
-		"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-	if (sponsorship)
-	{
-		memset((char*)sponsorship + 6, 0x22, 1); // 122 to 000
-		memset((char*)sponsorship + 7, 0x20, 15); // 122 to 000
-		g_Logger.Log(L"sponsorship patched!");
-	}
-	const auto skipsentry = FindPattern((uint8_t*)buff_addr, buff_size, (BYTE*)"sentry.io", "xxxxxxxxx");
-	if (skipsentry)
-	{
-		for (size_t i = 0; i < strnlen_s(localhost_str, 15); i++) {
-			memset((char*)skipsentry + i, localhost_str[i], 1);
-		}
-		g_Logger.Log(L"sentry.io -> localhost patched!");
-	}
-	const auto ishptohidden = FindPattern((uint8_t*)buff_addr, buff_size, (BYTE*)"isHptoHidden:!0", "xxxxxxxxxxxxxxx");
-	if (ishptohidden)
-	{
-		memset((char*)ishptohidden + 14, 0x31, 1); // 122 to 000
-		g_Logger.Log(L"isHptoHidden patched!");
-	}
-	const auto ishptoenable = FindPattern((uint8_t*)buff_addr, buff_size, (BYTE*)"hptoEnabled:!0", "xxxxxxxxxxxxxx");
-	if (ishptoenable)
-	{
-		memset((char*)ishptoenable + 13, 0x31, 1); // 122 to 000
-		g_Logger.Log(L"hptoEnabled patched!");
-	}
-	const auto sp_localhost = FindPattern((uint8_t*)buff_addr, buff_size, (BYTE*)"sp://ads/v1/ads/", "xxxxxxxxxxxxxxxx");
-	if (sp_localhost)
-	{
-		for (size_t i = 0; i < strnlen_s(sp_localhost_str, 19); i++) {
-			memset((char*)sp_localhost + i, sp_localhost_str[i], 1);
-		}
-		g_Logger.Log(L"sp://ads/v1/ads/ patched!");
-	}
+#ifdef _WIN64
 
-	const auto premium_free = FindPattern((uint8_t*)buff_addr, buff_size, (BYTE*)"\"free\"===e.session?.productState?.catalogue?.toLowerCase(),s=e=>null!==e.session?.productState&&1===parseInt(e.session?.productState?.ads,10),r=e=>\"premium\"",
-		"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-	if (premium_free)
-	{
-		for (size_t i = 0; i < strnlen_s(premium_free_str, 200); i++) {
-			memset((char*)premium_free + i, premium_free_str[i], 1);
-		}
-		g_Logger.Log(L"premium patched!");
-	}
-}
+extern "C" void hook_file_name();
+extern "C" void hook_zip_buffer();
+
+#else
+// 8B45 EC | mov eax,dword ptr ss:[ebp-14]	| 
+// 03C7    | add eax,edi					| [+3]
+// 50      | push eax						| 
+// FFD2    | call edx						| 
+// 03F8    | add edi,eax					| [+5]
 
 __declspec(naked) void hook_zip_buffer()
 {
 	__asm
 	{
-		add eax, edi;
-		mov buff_addr, eax;
-		push eax;
-		call edx;
-		mov buff_size, eax;
-		cmp xpui_found, 0;
-		jne skip;
+		add eax, edi
+		mov ZipScan.base_address, eax
+		push eax
+		call edx
+		mov ZipScan.image_size, eax
+		cmp xpui_found, 0
+		jne skip
+
 		//------------ preparation --------------------
-		pushad;
+		pushad
+
 		//------------ function call ------------------
-		call modify_buffer;
+		call modify_buffer
+
 		//------------ end call ------------------
-		popad;
+		popad
+
 		//------------ finish -------------------------
 	skip:
-		cmp hptocss_found, 0;
-		jne skip2;
-		//------------ preparation --------------------
-		pushad;
-		//------------ function call ------------------
-		call modify_buffer2;
-		//------------ end call ------------------
-		popad;
-		//------------ finish -------------------------
-	skip2:
-		push ret_addr;
-		retn;
+		push ret_addr
+		retn
 	}
 }
+#endif
 
-DWORD WINAPI Developer(LPVOID)
+DWORD WINAPI EnableDeveloper(LPVOID lpParam)
 {
-	const HMODULE hModule = GetModuleHandle(NULL);
-	MODULEINFO mInfo = { 0 };
-	if (TRUE == GetModuleInformation(GetCurrentProcess(), hModule, &mInfo, sizeof(MODULEINFO))) {
-		if (true == g_Logger.read(L"Config", L"Developer")) {
-			const auto skipPod = FindPattern((uint8_t*)hModule, mInfo.SizeOfImage, (BYTE*)"\x25\x01\xFF\xFF\xFF\x89\x85\xF8\xFB\xFF\xFF", "xxxxxx???xx");
-			if (skipPod)
-			{
-				DWORD oldProtect;
-				VirtualProtect((char*)skipPod, 5, PAGE_EXECUTE_READWRITE, &oldProtect);
-				memset((char*)skipPod, 0xB8, 1);
-				memset((char*)skipPod + 1, 0x03, 1);
-				memset((char*)skipPod + 2, 0x00, 3);
-				VirtualProtect((char*)skipPod, 5, oldProtect, &oldProtect);
-				g_Logger.Log(L"Developer - patch success!");
-			}
-			else {
-				g_Logger.Log(L"Developer - patch failed!");
-			}
+	try
+	{
+#ifdef _WIN64
+		const auto developer = PatternScanner::ScanFirst(L"41 22 DE 48 8B 95 40 05 00 00");
+		if (Memory::Write<std::vector<uint8_t>>(developer.data(), { 0xB3, 0x03, 0x90 })) {
+			Logger::Log(L"Developer - patch success!", Logger::LogLevel::Info);
 		}
+		else {
+			Logger::Log(L"Developer - patch failed!", Logger::LogLevel::Error);
+		}
+#else
+		const auto developer = PatternScanner::ScanFirst(L"25 01 FF FF FF 89 ?? ?? ?? FF FF");
+		if (Memory::Write<std::vector<uint8_t>>(developer.data(), { 0xB8, 0x03, 0x00 })) {
+			Logger::Log(L"Developer - patch success!", Logger::LogLevel::Info);
+		}
+		else {
+			Logger::Log(L"Developer - patch failed!", Logger::LogLevel::Error);
+		}
+#endif
+	}
+	catch (const std::exception& e)
+	{
+		Print({ Color::Red }, L"[{}] {}", L"ERROR", e.what());
 	}
 	return 0;
 }
 
-
-DWORD WINAPI KillBanner(LPVOID)
+DWORD WINAPI BlockAds(LPVOID lpParam)
 {
-	const HMODULE hModule = GetModuleHandle(NULL);
-	MODULEINFO mInfo = { 0 };
-	if (TRUE == GetModuleInformation(GetCurrentProcess(), hModule, &mInfo, sizeof(MODULEINFO))) {
-		if (true == g_Logger.read(L"Config", L"Banner")) {
-			const auto skipPod = FindPattern((uint8_t*)hModule, mInfo.SizeOfImage, (BYTE*)"\x8B\x45\xEC\x03\xC7\x50\xFF\xD2\x03\xF8", "xxxxxxxxxx");
-			if (skipPod)
-			{
-				const DWORD dwTmp = reinterpret_cast<DWORD>(skipPod) + 3;
-				ret_addr = dwTmp + 5;
-				DWORD oldProtect;
-#pragma region Zip_buffer_hook
-				VirtualProtect((LPVOID)dwTmp, 5, PAGE_EXECUTE_READWRITE, &oldProtect);
-				*(BYTE*)dwTmp = 0xE9; // jmp
-				*(DWORD*)(dwTmp + 1) = (DWORD)hook_zip_buffer - dwTmp - 5;
-				VirtualProtect((LPVOID)dwTmp, 5, oldProtect, &oldProtect);
-#pragma endregion
-				g_Logger.Log(L"Banner - patch success!");
-			}
-			else {
-				g_Logger.Log(L"Banner - patch failed!");
+	try
+	{
+#if 0
+		const auto pod = PatternScanner::ScanFirst(L"80 7C 24 70 07 0F 85 ?? ?? ?? ?? 48 8D").offset(5);
+		if (Memory::Write<std::vector<uint8_t>>(pod.data(), { 0x90, 0xE9 })) {
+			Logger::Log(L"Block Audio Ads - patch success!", Logger::LogLevel::Info);
+		}
+		else {
+			Logger::Log(L"Block Audio Ads - patch failed!", Logger::LogLevel::Error);
+		}
+#else
+		auto hModule = GetModuleHandleW(L"libcef.dll");
+		if (!hModule)
+			hModule = LoadLibraryW(L"libcef.dll");
+
+		if (hModule) {
+			cef_urlrequest_create_orig = /*cef_urlrequest_create;*/(_cef_urlrequest_create)GetProcAddress(hModule, "cef_urlrequest_create");
+			cef_string_userfree_utf16_free_orig = /*cef_urlrequest_create;*/(_cef_string_userfree_utf16_free)GetProcAddress(hModule, "cef_string_userfree_utf16_free");
+
+			if (cef_urlrequest_create_orig && cef_string_userfree_utf16_free_orig) {
+				if (!Hooking::HookFunction(&(PVOID&)cef_urlrequest_create_orig, (PVOID)cef_urlrequest_create_hook)) {
+					Logger::Log(L"BlockAds - patch failed!", Logger::LogLevel::Error);
+				}
+				else {
+					Logger::Log(L"BlockAds - patch success!", Logger::LogLevel::Info);
+				}
 			}
 		}
+#endif
+	}
+	catch (const std::exception& e)
+	{
+		Print({ Color::Red }, L"[{}] {}", L"ERROR", e.what());
+	}
+	return 0;
+}
+
+DWORD WINAPI BlockBanner(LPVOID lpParam)
+{
+	try
+	{
+#ifdef _WIN64
+		const auto FileName = PatternScanner::ScanFirst(L"48 85 C9 74 23 38 5C 24 48 74 14 E8 ?? ?? ?? ?? BA 18 00 00 00 48 8B 4C 24 40 E8 ?? ?? ?? ?? 48 89 5C 24 40 88 5C 24 48 48 8D 5E 08");
+		ret_addr_file_name = FileName + 5;
+		if (FileName.hook((PVOID)hook_file_name)) {
+			Logger::Log(L"FileName - patch success!", Logger::LogLevel::Info);
+		}
+		else {
+			Logger::Log(L"FileName - patch failed!", Logger::LogLevel::Error);
+		}
+
+		const auto SourceCode = PatternScanner::ScanFirst(L"48 63 C8 48 03 F1 49 3B F4 73 25 41 F6 C6 04");
+		ret_addr_file_source = SourceCode + 6;
+		if (SourceCode.hook((PVOID)hook_zip_buffer)) {
+			Logger::Log(L"SourceCode - patch success!", Logger::LogLevel::Info);
+		}
+		else {
+			Logger::Log(L"SourceCode - patch failed!", Logger::LogLevel::Error);
+		}
+#else
+		const auto SourceCode = PatternScanner::ScanFirst(L"8B 45 EC 03 C7 50 FF D2 03 F8").offset(3);
+		ret_addr_file_source = SourceCode + 5;
+		if (SourceCode.hook(hook_zip_buffer)) {
+			Logger::Log(L"SourceCode - patch success!", Logger::LogLevel::Info);
+		}
+		else {
+			Logger::Log(L"SourceCode - patch failed!", Logger::LogLevel::Error);
+		}
+#endif
+	}
+	catch (const std::exception& e)
+	{
+		Print({ Color::Red }, L"[{}] {}", L"ERROR", e.what());
 	}
 	return 0;
 }
