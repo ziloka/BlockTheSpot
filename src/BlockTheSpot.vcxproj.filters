@@ -14,8 +14,37 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
     <Filter Include="BasicUtils">
-      <UniqueIdentifier>{425b6aec-2197-4fab-b550-dc107e983f17}</UniqueIdentifier>
+      <UniqueIdentifier>{9dcdc059-59f5-4538-ad8f-b7ae1b3dc667}</UniqueIdentifier>
     </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Modify.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BlockTheSpot.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Debug.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dllmain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BasicUtils\Logger.cpp">
+      <Filter>BasicUtils</Filter>
+    </ClCompile>
+    <ClCompile Include="BasicUtils\PatternScanner.cpp">
+      <Filter>BasicUtils</Filter>
+    </ClCompile>
+    <ClCompile Include="BasicUtils\Utils.cpp">
+      <Filter>BasicUtils</Filter>
+    </ClCompile>
+    <ClCompile Include="BasicUtils\Console.cpp">
+      <Filter>BasicUtils</Filter>
+    </ClCompile>
+    <ClCompile Include="BasicUtils\Hooking.cpp">
+      <Filter>BasicUtils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Modify.h">
@@ -30,12 +59,6 @@
     <ClInclude Include="framework.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="BasicUtils\Console.h">
-      <Filter>BasicUtils</Filter>
-    </ClInclude>
-    <ClInclude Include="BasicUtils\Hooking.h">
-      <Filter>BasicUtils</Filter>
-    </ClInclude>
     <ClInclude Include="BasicUtils\Logger.h">
       <Filter>BasicUtils</Filter>
     </ClInclude>
@@ -48,40 +71,12 @@
     <ClInclude Include="BasicUtils\Utils.h">
       <Filter>BasicUtils</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="Debug.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dllmain.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Modify.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BasicUtils\Console.cpp">
+    <ClInclude Include="BasicUtils\Console.h">
       <Filter>BasicUtils</Filter>
-    </ClCompile>
-    <ClCompile Include="BasicUtils\Hooking.cpp">
+    </ClInclude>
+    <ClInclude Include="BasicUtils\Hooking.h">
       <Filter>BasicUtils</Filter>
-    </ClCompile>
-    <ClCompile Include="BasicUtils\Logger.cpp">
-      <Filter>BasicUtils</Filter>
-    </ClCompile>
-    <ClCompile Include="BasicUtils\PatternScanner.cpp">
-      <Filter>BasicUtils</Filter>
-    </ClCompile>
-    <ClCompile Include="BasicUtils\Utils.cpp">
-      <Filter>BasicUtils</Filter>
-    </ClCompile>
-    <ClCompile Include="BlockTheSpot.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <MASM Include="assembly_code.asm">
-      <Filter>Source Files</Filter>
-    </MASM>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="chrome_elf.def">
@@ -90,5 +85,10 @@
     <None Include="dpapi.def">
       <Filter>Source Files</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <MASM Include="assembly_code.asm">
+      <Filter>Source Files</Filter>
+    </MASM>
   </ItemGroup>
 </Project>
