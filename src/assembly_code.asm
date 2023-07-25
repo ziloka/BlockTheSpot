@@ -1,9 +1,4 @@
-IFNDEF X64
-.686p
-.XMM
-.MODEL FLAT, C
-ELSE
-
+.DATA
 ; External declarations
 EXTERN get_file_name : PROC
 EXTERN modify_source : PROC
@@ -127,7 +122,5 @@ hook_zip_buffer PROC
 	push ret_addr_file_source
 	ret 
 hook_zip_buffer ENDP 
-
-ENDIF ; X64
 
 END

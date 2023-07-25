@@ -18,21 +18,15 @@ static _cef_string_userfree_utf16_free cef_string_userfree_utf16_free_orig;
 
 static constexpr std::array<std::wstring_view, 3> block_list = { L"/ads/", L"/ad-logic/", L"/gabo-receiver-service/" };
 
+//static DWORD ret_addr = 0;
+PatternScanner::ModuleInfo ZipScan;
+
 #ifdef _WIN64
 static std::wstring file_name;
-std::uint64_t file_name_rcx;
-std::uint64_t ret_addr_file_name;
-std::uint64_t ret_addr_file_source;
-PatternScanner::ModuleInfo ZipScan;
+std::uint64_t file_name_rcx = 0;
+std::uint64_t ret_addr_file_name = 0;
+std::uint64_t ret_addr_file_source = 0;
 #else
-static bool xpui_found = false;
-
-static std::wstring file_name;
-static std::uintptr_t file_name_rcx;
-static std::uintptr_t ret_addr_file_name;
-static std::uintptr_t ret_addr_file_source;
-static PatternScanner::ModuleInfo ZipScan;
-
 DWORD WINAPI get_url(DWORD pRequest)
 {
 	DWORD retval = 0;
@@ -101,6 +95,7 @@ void WINAPI get_file_name()
 {
 	try {
 		file_name = *reinterpret_cast<wchar_t**>(file_name_rcx);
+		//MessageBoxW(0,file_name.c_str(), 0, 0);
 		//Print(L"{}", zip_file_name);
 		//system("pause");
 	}
@@ -159,9 +154,6 @@ void WINAPI modify_source()
 				else {
 					Logger::Log(L"adsEnabled - patch failed!", Logger::LogLevel::Error);
 				}
-//#ifdef _WIN32
-//				xpui_found = true;
-//#endif
 			}
 			else {
 				Logger::Log(L"adsEnabled - failed not found!", Logger::LogLevel::Error);
@@ -265,15 +257,10 @@ extern "C" void hook_zip_buffer();
 
 #else
 // 8B45 EC | mov eax,dword ptr ss:[ebp-14]	| 
-// 03C7    | add eax,edi					|
+// 03C7    | add eax,edi					| [+3]
 // 50      | push eax						| 
 // FFD2    | call edx						| 
-// 03F8    | add edi,eax					|
-
-void hook_file_name()
-{
-
-}
+// 03F8    | add edi,eax					| [+5]
 
 __declspec(naked) void hook_zip_buffer()
 {
@@ -291,14 +278,14 @@ __declspec(naked) void hook_zip_buffer()
 		pushad
 
 		//------------ function call ------------------
-		call modify_source
+		call modify_buffer
 
 		//------------ end call ------------------
 		popad
 
 		//------------ finish -------------------------
 	skip:
-		push ret_addr_zip
+		push ret_addr
 		retn
 	}
 }
@@ -310,29 +297,19 @@ DWORD WINAPI EnableDeveloper(LPVOID lpParam)
 	{
 #ifdef _WIN64
 		const auto developer = PatternScanner::ScanFirst(L"41 22 DE 48 8B 95 40 05 00 00");
-		if (developer.is_found()) {
-			if (Memory::Write<std::vector<std::uint8_t>>(developer.data(), { 0xB3, 0x03, 0x90 })) {
-				Logger::Log(L"Developer - patch success!", Logger::LogLevel::Info);
-			}
-			else {
-				Logger::Log(L"Developer - patch failed!", Logger::LogLevel::Error);
-			}
+		if (Memory::Write<std::vector<uint8_t>>(developer.data(), { 0xB3, 0x03, 0x90 })) {
+			Logger::Log(L"Developer - patch success!", Logger::LogLevel::Info);
 		}
 		else {
-			Logger::Log(L"Developer - failed not found!", Logger::LogLevel::Error);
+			Logger::Log(L"Developer - patch failed!", Logger::LogLevel::Error);
 		}
 #else
 		const auto developer = PatternScanner::ScanFirst(L"25 01 FF FF FF 89 ?? ?? ?? FF FF");
-		if (developer.is_found()) {
-			if (Memory::Write<std::vector<std::uint8_t>>(developer.data(), { 0xB8, 0x03, 0x00 })) {
-				Logger::Log(L"Developer - patch success!", Logger::LogLevel::Info);
-			}
-			else {
-				Logger::Log(L"Developer - patch failed!", Logger::LogLevel::Error);
-			}
+		if (Memory::Write<std::vector<uint8_t>>(developer.data(), { 0xB8, 0x03, 0x00 })) {
+			Logger::Log(L"Developer - patch success!", Logger::LogLevel::Info);
 		}
 		else {
-			Logger::Log(L"Developer - failed not found!", Logger::LogLevel::Error);
+			Logger::Log(L"Developer - patch failed!", Logger::LogLevel::Error);
 		}
 #endif
 	}
@@ -349,7 +326,7 @@ DWORD WINAPI BlockAds(LPVOID lpParam)
 	{
 #if 0
 		const auto pod = PatternScanner::ScanFirst(L"80 7C 24 70 07 0F 85 ?? ?? ?? ?? 48 8D").offset(5);
-		if (Memory::Write<std::vector<std::uint8_t>>(pod.data(), { 0x90, 0xE9 })) {
+		if (Memory::Write<std::vector<uint8_t>>(pod.data(), { 0x90, 0xE9 })) {
 			Logger::Log(L"Block Audio Ads - patch success!", Logger::LogLevel::Info);
 		}
 		else {
@@ -360,8 +337,7 @@ DWORD WINAPI BlockAds(LPVOID lpParam)
 		if (!hModule)
 			hModule = LoadLibraryW(L"libcef.dll");
 
-		if (hModule)
-		{
+		if (hModule) {
 			cef_urlrequest_create_orig = /*cef_urlrequest_create;*/(_cef_urlrequest_create)GetProcAddress(hModule, "cef_urlrequest_create");
 			cef_string_userfree_utf16_free_orig = /*cef_urlrequest_create;*/(_cef_string_userfree_utf16_free)GetProcAddress(hModule, "cef_string_userfree_utf16_free");
 
@@ -396,7 +372,7 @@ DWORD WINAPI BlockBanner(LPVOID lpParam)
 		else {
 			Logger::Log(L"FileName - patch failed!", Logger::LogLevel::Error);
 		}
-		
+
 		const auto SourceCode = PatternScanner::ScanFirst(L"48 63 C8 48 03 F1 49 3B F4 73 25 41 F6 C6 04");
 		ret_addr_file_source = SourceCode + 6;
 		if (SourceCode.hook((PVOID)hook_zip_buffer)) {
