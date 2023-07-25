@@ -20,9 +20,9 @@ static constexpr std::array<std::wstring_view, 3> block_list = { L"/ads/", L"/ad
 
 #ifdef _WIN64
 static std::wstring file_name;
-std::uintptr_t file_name_rcx;
-std::uintptr_t ret_addr_file_name;
-std::uintptr_t ret_addr_file_source;
+std::uint64_t file_name_rcx;
+std::uint64_t ret_addr_file_name;
+std::uint64_t ret_addr_file_source;
 PatternScanner::ModuleInfo ZipScan;
 #else
 static bool xpui_found = false;
@@ -61,7 +61,7 @@ DWORD WINAPI get_str(DWORD pRequest)
 	return retval;
 }
 #endif
-// debug da hata verdiği için hook iöin dbeug da ekle
+
 #ifndef NDEBUG
 void* cef_urlrequest_create_hook (struct _cef_request_t* request, void* client, void* request_context)
 #else
@@ -101,7 +101,7 @@ void WINAPI get_file_name()
 {
 	try {
 		file_name = *reinterpret_cast<wchar_t**>(file_name_rcx);
-		//Print(L"{}", file_name);
+		//Print(L"{}", zip_file_name);
 		//system("pause");
 	}
 	catch (const std::exception& e) {
@@ -114,7 +114,7 @@ void WINAPI modify_source()
 	try {
 		if (file_name == L"home-hpto.css")
 		{
-			//Print(L"{}", file_name);
+			//Print(L"{}", zip_file_name);
 			const auto hpto = PatternScanner::ScanFirst(ZipScan.base_address, ZipScan.image_size, L".WiPggcPDzbwGxoxwLWFf{-webkit-box-pack:center;-ms-flex-pack:center;display:-webkit-box;display:-ms-flexbox;display:flex;");
 			if (hpto.is_found()) {
 				if (Memory::Write<const char*>(hpto.data(), ".WiPggcPDzbwGxoxwLWFf{-webkit-box-pack:center;-ms-flex-pack:center;display:-webkit-box;display:-ms-flexbox;display:none;")) {
@@ -131,7 +131,7 @@ void WINAPI modify_source()
 
 		if (file_name == L"xpui-routes-profile.js")
 		{
-			//Print(L"{}", file_name);
+			//Print(L"{}", zip_file_name);
 			const auto isModalOpen = PatternScanner::ScanAll(ZipScan.base_address, ZipScan.image_size, L"isModalOpen:!0");
 			if (isModalOpen[0].is_found()) {
 				for (const auto& it : isModalOpen) {
@@ -150,7 +150,7 @@ void WINAPI modify_source()
 
 		if (file_name == L"xpui.js")
 		{
-			//Print(L"{}", file_name);
+			//Print(L"{}", zip_file_name);
 			const auto skipads = PatternScanner::ScanFirst(ZipScan.base_address, ZipScan.image_size, L"adsEnabled:!0");
 			if (skipads.is_found()) {
 				if (Memory::Write<const char>(skipads.offset(12).data(), '1')) {
@@ -264,11 +264,11 @@ extern "C" void hook_file_name();
 extern "C" void hook_zip_buffer();
 
 #else
-// 8B45 EC | mov eax,dword ptr ss:[ebp-14]
-// 03C7    | add eax,edi
-// 50      | push eax
-// FFD2    | call edx
-// 03F8    | add edi,eax
+// 8B45 EC | mov eax,dword ptr ss:[ebp-14]	| 
+// 03C7    | add eax,edi					|
+// 50      | push eax						| 
+// FFD2    | call edx						| 
+// 03F8    | add edi,eax					|
 
 void hook_file_name()
 {
@@ -298,7 +298,7 @@ __declspec(naked) void hook_zip_buffer()
 
 		//------------ finish -------------------------
 	skip:
-		push ret_addr_file_source
+		push ret_addr_zip
 		retn
 	}
 }

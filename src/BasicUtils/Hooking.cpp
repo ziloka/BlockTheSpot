@@ -2,19 +2,7 @@
 #include <stdexcept>
 #include "../detours/detours.h"
 
-#ifdef _WIN64
-#ifdef NDEBUG
-#pragma comment(lib, "detours_x64.lib")
-#else
-#pragma comment(lib, "detours_x64d.lib")
-#endif
-#else
-#ifdef NDEBUG
-#pragma comment(lib, "detours_x86.lib")
-#else
-#pragma comment(lib, "detours_x86d.lib")
-#endif
-#endif
+#pragma comment(lib, "Detours.lib")
 
 bool Hooking::HookFunction(std::vector<PVOID*> ppPointers, std::vector<PVOID> pDetours) {
     if (Begin())
