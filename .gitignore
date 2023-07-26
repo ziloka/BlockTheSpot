@@ -3,11 +3,8 @@
 ################################################################################
 
 
-/src/Release
-/src/Debug
-*.sln
-/Debug
-/Release
+/src/x64
+/x64
 *.exp
 *.iobj
 *.ipdb
@@ -17,5 +14,4 @@
 *.aps
 *.zip
 /.vs
-/src/.vs/BlockTheSpot/v16
-/src/.vs/BlockTheSpot
+/src/.vs

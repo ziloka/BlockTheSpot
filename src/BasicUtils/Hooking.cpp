@@ -1,8 +1,6 @@
 #include "Hooking.h"
 #include <stdexcept>
-#include "../detours/detours.h"
-
-#pragma comment(lib, "Detours.lib")
+#include <detours.h>
 
 bool Hooking::HookFunction(std::vector<PVOID*> ppPointers, std::vector<PVOID> pDetours) {
     if (Begin())
