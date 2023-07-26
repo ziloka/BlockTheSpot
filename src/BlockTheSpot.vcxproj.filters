@@ -1,56 +1,95 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="dllmain.cpp" />
-    <ClCompile Include="stdafx.cpp" />
-    <ClCompile Include="Modify.cpp" />
-    <ClCompile Include="BlockTheSpot.cpp" />
-    <ClCompile Include="disasm-lib\cpu.c">
-      <Filter>disasm-lib</Filter>
-    </ClCompile>
-    <ClCompile Include="disasm-lib\disasm.c">
-      <Filter>disasm-lib</Filter>
-    </ClCompile>
-    <ClCompile Include="disasm-lib\disasm_x86.c">
-      <Filter>disasm-lib</Filter>
-    </ClCompile>
-    <ClCompile Include="mhook-lib\mhook.cpp">
-      <Filter>mhook-lib</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="stdafx.h" />
-    <ClInclude Include="targetver.h" />
-    <ClInclude Include="Modify.h" />
-    <ClInclude Include="Logger.h" />
-    <ClInclude Include="disasm-lib\cpu.h">
-      <Filter>disasm-lib</Filter>
-    </ClInclude>
-    <ClInclude Include="disasm-lib\disasm.h">
-      <Filter>disasm-lib</Filter>
-    </ClInclude>
-    <ClInclude Include="disasm-lib\disasm_x86.h">
-      <Filter>disasm-lib</Filter>
-    </ClInclude>
-    <ClInclude Include="disasm-lib\disasm_x86_tables.h">
-      <Filter>disasm-lib</Filter>
-    </ClInclude>
-    <ClInclude Include="disasm-lib\misc.h">
-      <Filter>disasm-lib</Filter>
-    </ClInclude>
-    <ClInclude Include="mhook-lib\mhook.h">
-      <Filter>mhook-lib</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\README.md" />
-  </ItemGroup>
-  <ItemGroup>
-    <Filter Include="disasm-lib">
-      <UniqueIdentifier>{3162897c-8c49-439a-bea3-bd980758f058}</UniqueIdentifier>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="mhook-lib">
-      <UniqueIdentifier>{3fe47c7b-0eca-4f27-b472-57049590c4de}</UniqueIdentifier>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="BasicUtils">
+      <UniqueIdentifier>{425b6aec-2197-4fab-b550-dc107e983f17}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Modify.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Debug.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="framework.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BasicUtils\Console.h">
+      <Filter>BasicUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="BasicUtils\Hooking.h">
+      <Filter>BasicUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="BasicUtils\Logger.h">
+      <Filter>BasicUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="BasicUtils\Memory.h">
+      <Filter>BasicUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="BasicUtils\PatternScanner.h">
+      <Filter>BasicUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="BasicUtils\Utils.h">
+      <Filter>BasicUtils</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Debug.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dllmain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Modify.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BasicUtils\Console.cpp">
+      <Filter>BasicUtils</Filter>
+    </ClCompile>
+    <ClCompile Include="BasicUtils\Hooking.cpp">
+      <Filter>BasicUtils</Filter>
+    </ClCompile>
+    <ClCompile Include="BasicUtils\Logger.cpp">
+      <Filter>BasicUtils</Filter>
+    </ClCompile>
+    <ClCompile Include="BasicUtils\PatternScanner.cpp">
+      <Filter>BasicUtils</Filter>
+    </ClCompile>
+    <ClCompile Include="BasicUtils\Utils.cpp">
+      <Filter>BasicUtils</Filter>
+    </ClCompile>
+    <ClCompile Include="BlockTheSpot.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <MASM Include="assembly_code.asm">
+      <Filter>Source Files</Filter>
+    </MASM>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="chrome_elf.def">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="dpapi.def">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>
