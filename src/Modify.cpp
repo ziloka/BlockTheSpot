@@ -1,5 +1,4 @@
 ﻿#include "pch.h"
-#include <sstream>
 
 /*
 * 
@@ -23,11 +22,7 @@ static constexpr std::array<std::wstring_view, 3> block_list = { L"/ads/", L"/ad
 PatternScanner::ModuleInfo ZipScan;
 
 #ifdef _WIN64
-//static std::wstring file_name;
-static std::string file_name;
-static char file_name_buf[512] = {0,};
-static size_t file_name_len = 0;
-//static std::vector<char> file_name_buf;
+static std::wstring file_name;
 std::uint64_t file_name_rcx = 0;
 std::uint64_t ret_addr_file_name = 0;
 std::uint64_t ret_addr_file_source = 0;
@@ -98,29 +93,21 @@ void* cef_urlrequest_create_hook(void* request, void* client, void* request_cont
 
 void WINAPI get_file_name()
 {
-	//try {
-		const auto char_len = wcslen(*reinterpret_cast<wchar_t**>(file_name_rcx));
-		const auto length = WideCharToMultiByte(CP_ACP, 0, *reinterpret_cast<wchar_t**>(file_name_rcx), char_len, file_name_buf, 0, nullptr, nullptr);
-		file_name_len = length;
-		WideCharToMultiByte(CP_ACP, 0,  *reinterpret_cast<wchar_t**>(file_name_rcx), char_len, file_name_buf, file_name_len + 1, nullptr, nullptr);
-		file_name_buf[length] = 0;
-		file_name.assign(file_name_buf, file_name_len);
+	try {
+		file_name = *reinterpret_cast<wchar_t**>(file_name_rcx);
+		//MessageBoxW(0,file_name.c_str(), 0, 0);
 		//Print(L"{}", zip_file_name);
 		//system("pause");
-	//}
-	//catch (const std::exception& e) {
-	//	Print({ Color::Red }, L"[{}] {}", L"ERROR", e.what());
-	//}
+	}
+	catch (const std::exception& e) {
+		Print({ Color::Red }, L"[{}] {}", L"ERROR", e.what());
+	}
 }
 
 void WINAPI modify_source()
 {
-	//if (0 == ZipScan.base_address || 0 == ZipScan.image_size)
-	//	return;
-	
-	//try {
-		
-		if (file_name == "home-hpto.css")
+	try {
+		if (file_name == L"home-hpto.css")
 		{
 			//Print(L"{}", zip_file_name);
 			const auto hpto = PatternScanner::ScanFirst(ZipScan.base_address, ZipScan.image_size, L".WiPggcPDzbwGxoxwLWFf{-webkit-box-pack:center;-ms-flex-pack:center;display:-webkit-box;display:-ms-flexbox;display:flex;");
@@ -137,7 +124,7 @@ void WINAPI modify_source()
 			}
 		}
 
-		if (file_name == "xpui-routes-profile.js")
+		if (file_name == L"xpui-routes-profile.js")
 		{
 			//Print(L"{}", zip_file_name);
 			const auto isModalOpen = PatternScanner::ScanAll(ZipScan.base_address, ZipScan.image_size, L"isModalOpen:!0");
@@ -156,7 +143,7 @@ void WINAPI modify_source()
 			}
 		}
 
-		if (file_name == "xpui.js")
+		if (file_name == L"xpui.js")
 		{
 			//Print(L"{}", zip_file_name);
 			const auto skipads = PatternScanner::ScanFirst(ZipScan.base_address, ZipScan.image_size, L"adsEnabled:!0");
@@ -257,10 +244,10 @@ void WINAPI modify_source()
 				Logger::Log(L"premium - failed not found!", Logger::LogLevel::Error);
 			}
 		}
-	//}
-	//catch (const std::exception& e) {
-	//	Print({ Color::Red }, L"[{}] {}", L"ERROR", e.what());
-	//}
+	}
+	catch (const std::exception& e) {
+		Print({ Color::Red }, L"[{}] {}", L"ERROR", e.what());
+	}
 }
 
 #ifdef _WIN64
