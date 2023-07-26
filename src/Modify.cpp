@@ -98,7 +98,7 @@ void* cef_urlrequest_create_hook(void* request, void* client, void* request_cont
 
 void WINAPI get_file_name()
 {
-	try {
+	//try {
 		const auto char_len = wcslen(*reinterpret_cast<wchar_t**>(file_name_rcx));
 		const auto length = WideCharToMultiByte(CP_ACP, 0, *reinterpret_cast<wchar_t**>(file_name_rcx), char_len, file_name_buf, 0, nullptr, nullptr);
 		file_name_len = length;
@@ -107,17 +107,18 @@ void WINAPI get_file_name()
 		file_name.assign(file_name_buf, file_name_len);
 		//Print(L"{}", zip_file_name);
 		//system("pause");
-	}
-	catch (const std::exception& e) {
-		Print({ Color::Red }, L"[{}] {}", L"ERROR", e.what());
-	}
+	//}
+	//catch (const std::exception& e) {
+	//	Print({ Color::Red }, L"[{}] {}", L"ERROR", e.what());
+	//}
 }
 
 void WINAPI modify_source()
 {
+	//if (0 == ZipScan.base_address || 0 == ZipScan.image_size)
+	//	return;
 	
-	//MessageBoxA(0, file_name.c_str(), file_name.c_str(), 0);
-	try {
+	//try {
 		
 		if (file_name == "home-hpto.css")
 		{
@@ -256,10 +257,10 @@ void WINAPI modify_source()
 				Logger::Log(L"premium - failed not found!", Logger::LogLevel::Error);
 			}
 		}
-	}
-	catch (const std::exception& e) {
-		Print({ Color::Red }, L"[{}] {}", L"ERROR", e.what());
-	}
+	//}
+	//catch (const std::exception& e) {
+	//	Print({ Color::Red }, L"[{}] {}", L"ERROR", e.what());
+	//}
 }
 
 #ifdef _WIN64
