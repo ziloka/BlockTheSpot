@@ -64,13 +64,13 @@ namespace Console {
 	void Print(std::wstring_view fmt, const auto&... args)
 	{
 #if defined(_DEBUG) || defined(_CONSOLE)
-		try {
+		//try {
 			std::scoped_lock lock(cout_mutex);
 			std::wcout << std::vformat(fmt, std::make_wformat_args(TypeConvert(args)...)) << std::endl;
-		}
-		catch (const std::exception& e) {
-			throw std::runtime_error("Failed to format string: " + std::string(e.what()));
-		}
+		//}
+		//catch (const std::exception& e) {
+		//	throw std::runtime_error("Failed to format string: " + std::string(e.what()));
+		//}
 #endif
 	}
 

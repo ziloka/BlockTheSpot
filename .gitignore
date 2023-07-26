@@ -9,7 +9,6 @@
 *.iobj
 *.ipdb
 *.pdb
-*.lib
 *.dll
 *.aps
 *.zip
