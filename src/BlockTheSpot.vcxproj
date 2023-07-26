@@ -16,6 +16,7 @@
     <ProjectGuid>{dcc156a5-5810-4c3b-b95d-a168ceaa3629}</ProjectGuid>
     <RootNamespace>BlockTheSpot</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+	<ResolveNuGetPackages>true</ResolveNuGetPackages>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
