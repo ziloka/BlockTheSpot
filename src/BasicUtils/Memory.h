@@ -5,8 +5,6 @@
 #include <cstddef>
 #include <stdexcept>
 #include <vector>
-#include "Console.h"
-using namespace Console;
 
 namespace Memory {
     template<typename T>
@@ -23,7 +21,7 @@ namespace Memory {
             throw std::runtime_error("Failed to set memory protection for reading");
 
         std::memcpy(static_cast<void*>(&buffer), address, bufferSize);
-        
+    
         if (!VirtualProtect(address, bufferSize, oldProtect, &oldProtect))
             throw std::runtime_error("Failed to restore memory protection after reading");
         return true;
@@ -79,6 +77,11 @@ namespace Memory {
             throw std::runtime_error("Failed to restore memory protection after writing");
 
         return true;
+    }
+
+    template <typename T, typename U>
+    std::size_t GetMemberFunctionOffset(U T::* member_ptr) {
+        return reinterpret_cast<std::size_t>(&(((T*)nullptr)->*member_ptr));
     }
 }
 

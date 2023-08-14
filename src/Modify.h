@@ -3,7 +3,9 @@ DWORD WINAPI EnableDeveloper(LPVOID lpParam);
 DWORD WINAPI BlockAds(LPVOID lpParam);
 DWORD WINAPI BlockBanner(LPVOID lpParam);
 
-#ifdef _WIN64
+#define NEW_HOOK_SYSTEM
+
+#if defined(_WIN64) && !defined(NEW_HOOK_SYSTEM)
 extern "C" void WINAPI get_file_name();
 extern "C" void WINAPI modify_source();
 

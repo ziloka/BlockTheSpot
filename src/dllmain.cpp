@@ -63,7 +63,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
 					}
 				}
 				catch (const std::exception& e) {
-					Print({ Color::Red }, L"[{}] {}", L"ERROR", Utils::ToString(e.what()));
+					PrintError(Utils::ToString(e.what()));
 				}
 			}
 			break;

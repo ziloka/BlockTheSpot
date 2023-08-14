@@ -1,61 +1,67 @@
 #include "Hooking.h"
 #include <stdexcept>
+#include <mutex>
 #include <detours.h>
 
-bool Hooking::HookFunction(std::vector<PVOID*> ppPointers, std::vector<PVOID> pDetours) {
-    if (Begin())
-    {
-        for (size_t i = 0; i < ppPointers.size(); i++) {
-            if (FindHookFunction(ppPointers[i]) != nullptr) {
+std::mutex mtx;
+
+bool Hooking::HookFunction(HookData data) 
+{
+    std::scoped_lock lock(mtx);
+    if (Begin()) {
+        for (auto& [ppPointer, pDetour] : data) {
+            if (FindHookFunction(ppPointer) != nullptr) {
                 throw std::runtime_error("DetourAttach failed");
             }
 
-            if (DetourAttach(ppPointers[i], pDetours[i]) != NO_ERROR) {
+            if (DetourAttach(ppPointer, pDetour) != NO_ERROR) {
                 throw std::runtime_error("DetourAttach failed");
             }
 
-            InsertHookFunction(ppPointers[i], pDetours[i]);
+            InsertHookFunction(ppPointer, pDetour);
         }
         return Commit();
     }
     return false;
 }
 
-bool Hooking::HookFunction(PVOID* ppPointers, PVOID pDetours) {
-    auto _ppPointers = { ppPointers };
-    auto _pDetours = { pDetours };
-    return HookFunction(_ppPointers, _pDetours);
+bool Hooking::HookFunction(PVOID* ppPointers, PVOID pDetours)
+{
+    HookData data = { {ppPointers, pDetours} };
+    return HookFunction(data);
 }
 
-bool Hooking::UnhookFunction(std::vector<PVOID*> ppPointers, std::vector<PVOID> pDetours) {
-    if (Begin())
-    {
-        for (size_t i = 0; i < ppPointers.size(); i++) {
-            if (pDetours[i] == nullptr) {
-                pDetours[i] = FindHookFunction(ppPointers[i]);
-                if (pDetours[i] == nullptr) {
+bool Hooking::UnhookFunction(HookData data) 
+{
+    std::scoped_lock lock(mtx);
+    if (Begin()) {
+        for (auto& [ppPointer, pDetour] : data) {
+            if (pDetour == nullptr) {
+                pDetour = FindHookFunction(ppPointer);
+                if (pDetour == nullptr) {
                     throw std::runtime_error("DetourDetach failed");
                 }
             }
 
-            if (DetourDetach(ppPointers[i], pDetours[i]) != NO_ERROR) {
+            if (DetourDetach(ppPointer, pDetour) != NO_ERROR) {
                 throw std::runtime_error("DetourDetach failed");
             }
 
-            EraseHookFunction(ppPointers[i]);
+            EraseHookFunction(ppPointer);
         }
         return Commit();
     }
     return false;
 }
 
-bool Hooking::UnhookFunction(PVOID* ppPointers, PVOID pDetours) {
-    auto _ppPointers = { ppPointers };
-    auto _pDetours = { pDetours };
-    return UnhookFunction(_ppPointers, _pDetours);
+bool Hooking::UnhookFunction(PVOID* ppPointers, PVOID pDetours) 
+{
+    HookData data = { {ppPointers, pDetours} };
+    return UnhookFunction(data);
 }
 
-bool Hooking::Begin() {
+bool Hooking::Begin()
+{
     if (DetourIsHelperProcess()) {
         throw std::runtime_error("DetourIsHelperProcess failed");
     }
@@ -69,7 +75,8 @@ bool Hooking::Begin() {
     return true;
 }
 
-bool Hooking::Commit() {
+bool Hooking::Commit() 
+{
     if (DetourTransactionCommit() != NO_ERROR) {
         throw std::runtime_error("DetourTransactionCommit failed");
     }
@@ -86,7 +93,8 @@ void Hooking::EraseHookFunction(PVOID* ppPointers)
     HookFunctionList.erase(ppPointers);
 }
 
-PVOID Hooking::FindHookFunction(PVOID* ppPointers) {
+PVOID Hooking::FindHookFunction(PVOID* ppPointers)
+{
     auto iter = HookFunctionList.find(ppPointers);
     if (iter != HookFunctionList.end()) {
         return iter->second;
@@ -94,4 +102,4 @@ PVOID Hooking::FindHookFunction(PVOID* ppPointers) {
     return nullptr;
 }
 
-std::map<PVOID*, PVOID> Hooking::HookFunctionList;
+Hooking::HookData Hooking::HookFunctionList;
