@@ -46,7 +46,7 @@ function Get-File
   if ($useBitTransfer)
   {
     Write-Information -MessageData 'Using a fallback BitTransfer method since you are running Windows PowerShell'
-    Start-BitsTransfer -Source $Uri -Destination "$($TargetFile.FullName)"
+    Invoke-WebRequest -URI $Uri -OutFile "$($TargetFile.FullName)"
   }
   else
   {
